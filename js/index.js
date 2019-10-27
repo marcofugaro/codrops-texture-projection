@@ -1,6 +1,6 @@
 import WebGLApp from './lib/WebGLApp'
 import assets from './lib/AssetManager'
-import Box from './scene/Box'
+import { Boxes } from './scene/Boxes'
 
 window.DEBUG = window.location.search.includes('debug')
 
@@ -10,13 +10,11 @@ const canvas = document.querySelector('#app')
 // setup the WebGLRenderer
 const webgl = new WebGLApp({
   canvas,
-  // enable transparency
-  alpha: true,
   // set the scene background color
-  background: '#000',
-  backgroundAlpha: 1,
+  background: '#333',
   // show the fps counter from stats.js
   showFps: window.DEBUG,
+  orbitControls: window.DEBUG,
 })
 
 // attach it to the window to inspect in the console
@@ -38,8 +36,8 @@ assets.load({ renderer: webgl.renderer }).then(() => {
   // add any "WebGL components" here...
   // append them to the scene so you can
   // use them from other components easily
-  webgl.scene.box = new Box({ webgl })
-  webgl.scene.add(webgl.scene.box)
+  webgl.scene.boxes = new Boxes({ webgl })
+  webgl.scene.add(webgl.scene.boxes)
 
   // start animation loop
   webgl.start()
