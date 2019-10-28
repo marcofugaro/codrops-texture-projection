@@ -12,8 +12,8 @@ export class Boxes extends THREE.Group {
     super(options)
     this.webgl = webgl
 
-    const unitX = 0.8
-    const unitY = 0.8
+    const unitX = 0.1
+    const unitY = 0.1
     const rows = Math.ceil(AREA_HEIGHT / unitX)
     const columns = Math.ceil(AREA_WIDTH / unitY)
 
@@ -23,7 +23,11 @@ export class Boxes extends THREE.Group {
     for (let row = 0; row < rows; row++) {
       for (let column = 0; column < columns; column++) {
         const geometry = new THREE.BoxBufferGeometry(unitX, unitY, unitY)
-        const material = new ProjectedMaterial({ camera: webgl.camera, texture, color: 0xffffff })
+        const material = new ProjectedMaterial({
+          camera: webgl.camera,
+          texture,
+          color: 0xffffff,
+        })
         const box = new THREE.Mesh(geometry, material)
 
         box.position.x = mapRange(column, 0, columns - 1, -AREA_WIDTH / 2, AREA_WIDTH / 2)

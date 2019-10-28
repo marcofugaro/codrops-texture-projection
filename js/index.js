@@ -14,7 +14,7 @@ const webgl = new WebGLApp({
   background: '#333',
   // show the fps counter from stats.js
   showFps: window.DEBUG,
-  orbitControls: window.DEBUG,
+  orbitControls: window.DEBUG && { distance: 5 },
 })
 
 // attach it to the window to inspect in the console
