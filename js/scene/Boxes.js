@@ -23,7 +23,7 @@ export class Boxes extends THREE.Group {
     for (let row = 0; row < rows; row++) {
       for (let column = 0; column < columns; column++) {
         const geometry = new THREE.BoxBufferGeometry(unitX, unitY, unitY)
-        const material = new ProjectedMaterial({ camera: webgl.camera, texture, color: 0xffaacc })
+        const material = new ProjectedMaterial({ camera: webgl.camera, texture, color: 0xffffff })
         const box = new THREE.Mesh(geometry, material)
 
         box.position.x = mapRange(column, 0, columns - 1, -AREA_WIDTH / 2, AREA_WIDTH / 2)
@@ -33,9 +33,9 @@ export class Boxes extends THREE.Group {
         box.rotateY(Math.random() * (Math.PI / 4))
         box.rotateZ(Math.random() * (Math.PI / 4))
 
-        // TODO do this in the material???
+        // project the texture!
         box.updateMatrixWorld()
-        material.project(box.matrixWorld)
+        box.material.project(box.matrixWorld)
 
         this.add(box)
         this.boxes.push(box)
