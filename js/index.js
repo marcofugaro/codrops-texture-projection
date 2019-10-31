@@ -11,7 +11,7 @@ const canvas = document.querySelector('#app')
 const webgl = new WebGLApp({
   canvas,
   // set the scene background color
-  background: '#333',
+  background: '#111',
   // show the fps counter from stats.js
   showFps: window.DEBUG,
   orbitControls: window.DEBUG && { distance: 5 },

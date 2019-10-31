@@ -23,6 +23,7 @@
     "controls-state": "^1.1.1",
     "datauritoblob": "^1.0.0",
     "detect-gpu": "^1.1.2",
+    "eases": "^1.0.8",
     "image-promise": "^6.0.2",
     "lodash": "^4.17.15",
     "orbit-controls": "^1.2.4",
