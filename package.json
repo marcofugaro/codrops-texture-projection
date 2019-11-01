@@ -28,7 +28,9 @@
     "lodash": "^4.17.15",
     "orbit-controls": "^1.2.4",
     "p-map": "^3.0.0",
+    "poisson-disk-sampling": "^1.0.6",
     "pretty-ms": "^5.0.0",
+    "simplex-noise": "^2.4.0",
     "stats.js": "^0.17.0",
     "three": "0.109.0",
     "touches": "^1.2.2"
