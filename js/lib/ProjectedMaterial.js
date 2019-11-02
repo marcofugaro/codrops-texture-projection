@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 
 export class ProjectedMaterial extends THREE.ShaderMaterial {
-  constructor({ camera, texture, color = 0xffffff } = {}) {
+  constructor({ camera, texture, color = 0xffffff, renderer, textureScale } = {}) {
     // make sure the camera matrices are updated
-    // camera.updateProjectionMatrix()
+    camera.updateProjectionMatrix()
     camera.updateMatrixWorld()
-    // camera.updateWorldMatrix()
+    camera.updateWorldMatrix()
 
     // get the matrices from the camera so they're fixed in camera's original position
     const viewMatrixCamera = camera.matrixWorldInverse.clone()
@@ -14,8 +14,22 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
 
     const projPosition = camera.position.clone()
 
+    const ratio = texture.image.naturalWidth / texture.image.naturalHeight
+
+    const gl = renderer.getContext()
+    window.addEventListener('resize', () => {
+      this.uniforms.resolution.value = new THREE.Vector2(
+        gl.drawingBufferWidth,
+        gl.drawingBufferHeight
+      )
+    })
+
     super({
       uniforms: {
+        resolution: {
+          type: 'v2',
+          value: new THREE.Vector2(gl.drawingBufferWidth, gl.drawingBufferHeight),
+        },
         baseColor: { value: new THREE.Color(color) },
         viewMatrixCamera: { type: 'm4', value: viewMatrixCamera },
         projectionMatrixCamera: { type: 'm4', value: projectionMatrixCamera },
@@ -24,6 +38,8 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
         savedModelMatrix: { type: 'mat4', value: new THREE.Matrix4() },
         texture: { value: texture },
         projPosition: { type: 'v3', value: projPosition },
+        ratio: { value: ratio },
+        textureScale: { value: textureScale },
       },
 
       vertexShader: `
@@ -46,16 +62,39 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
       `,
 
       fragmentShader: `
+        uniform vec2 resolution;
         uniform vec3 baseColor;
         uniform sampler2D texture;
         uniform vec3 projPosition;
+        uniform float ratio;
+        uniform float textureScale;
 
         varying vec3 vNormal;
         varying vec4 vWorldPosition;
         varying vec4 vTexCoords;
 
+        float map(float value, float min1, float max1, float min2, float max2) {
+          return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+        }
+
         void main() {
           vec2 uv = (vTexCoords.xy / vTexCoords.w) * 0.5 + 0.5;
+
+          // keep the image proportions and apply textureScale
+          if (ratio < 1.0) {
+            float width = resolution.y * ratio;
+            float widthPercent = 1.0 / (width / resolution.x * textureScale);
+            uv.x = map(uv.x, 0.0, 1.0, 0.5 - widthPercent / 2.0, 0.5 + widthPercent / 2.0);
+            float heightPercent = 1.0 / textureScale;
+            uv.y = map(uv.y, 0.0, 1.0, 0.5 - heightPercent / 2.0, 0.5 + heightPercent / 2.0);
+          } else {
+            float height = resolution.x * (1.0 / ratio);
+            float heightPercent = 1.0 / ((height / resolution.y) * 0.5);
+            uv.y = map(uv.y, 0.0, 1.0, 0.5 - heightPercent / 2.0, 0.5 + heightPercent / 2.0);
+            float widthPercent = 1.0 / textureScale;
+            uv.x = map(uv.x, 0.0, 1.0, 0.5 - widthPercent / 2.0, 0.5 + widthPercent / 2.0);
+          }
+
           vec4 color = texture2D(texture, uv);
 
           // this makes sure we don't sample out of the texture
@@ -72,7 +111,6 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
             color = vec4(baseColor, 1.0);
           }
 
-          // color = vec4(vec3(dotProduct), 1.0);
           gl_FragColor = color;
         }
       `,

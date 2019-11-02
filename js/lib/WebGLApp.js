@@ -52,6 +52,8 @@ export default class WebGLApp {
 
     this.scene = new THREE.Scene()
 
+    this.gl = this.renderer.getContext()
+
     this.time = 0
     this.isRunning = false
     this.#lastTime = performance.now()

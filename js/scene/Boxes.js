@@ -2,18 +2,17 @@ import * as THREE from 'three'
 import { mapRange } from 'canvas-sketch-util/math'
 import * as eases from 'eases'
 import { ProjectedMaterial } from '../lib/ProjectedMaterial'
-import { alignOnCurve } from '../lib/three-utils'
+import { alignOnCurve, visibleHeightAtZDepth, visibleWidthAtZDepth } from '../lib/three-utils'
 import assets from '../lib/AssetManager'
 import { noise, poisson } from '../lib/utils'
 
-const AREA_WIDTH = 2.8
-const AREA_HEIGHT = 1.7
 const ANIMATION_DURATION = 2 // seconds
 const DELAY_MULTIPLICATOR = 2.5
+const TEXTURE_SCALE = 0.7
 
 // preload the texture
 const textureKey = assets.queue({
-  url: 'http://mbnsay.com/rayys/images/1K_UV_checker.jpg',
+  url: 'images/justin-essah-unsplash.jpg',
   type: 'texture',
 })
 
@@ -28,15 +27,26 @@ export class Boxes extends THREE.Group {
 
     const texture = assets.get(textureKey)
 
+    const ratio = texture.image.naturalWidth / texture.image.naturalHeight
+    let width
+    let height
+    if (ratio < 1) {
+      height = visibleHeightAtZDepth(webgl.camera.position.z, webgl.camera) * TEXTURE_SCALE
+      width = height * ratio
+    } else {
+      width = visibleWidthAtZDepth(webgl.camera.position.z, webgl.camera) * TEXTURE_SCALE
+      height = width * (1 / ratio)
+    }
+
     // get the points xy coordinates based on poisson-disc sampling
     console.time('⏱Poisson-disc sampling')
-    const pointsXY = poisson([AREA_WIDTH, AREA_HEIGHT])
+    const pointsXY = poisson([width, height])
     console.timeEnd('⏱Poisson-disc sampling')
     console.log(`Generated ${pointsXY.length} points`)
 
     pointsXY.forEach(point => {
       // the arriving point
-      const [x, y] = [point[0] - AREA_WIDTH / 2, point[1] - AREA_HEIGHT / 2]
+      const [x, y] = [point[0] - width / 2, point[1] - height / 2]
       const noiseZoom = 0.5
       const z = noise(x * noiseZoom, y * noiseZoom) * 0.4
 
@@ -45,7 +55,10 @@ export class Boxes extends THREE.Group {
       const material = new ProjectedMaterial({
         camera: webgl.camera,
         texture,
-        color: 0x333333,
+        textureScale: TEXTURE_SCALE,
+        color: 0x222222,
+        renderer: webgl.renderer,
+        // TODO implement cover: true
       })
       const box = new THREE.Mesh(geometry, material)
       this.boxes.push(box)
@@ -71,26 +84,7 @@ export class Boxes extends THREE.Group {
       }
 
       // give delay to each box
-
-      // const distancePoint = new THREE.Vector3(
-      //   AREA_WIDTH * 0 - AREA_WIDTH / 2,
-      //   AREA_HEIGHT * 0.5 - AREA_HEIGHT / 2,
-      //   z
-      // )
-      // const arrivingPosition = new THREE.Vector3(x, y, z)
-      // const distance = arrivingPosition.distanceTo(distancePoint)
-
-      // const delay = Math.pow(distance, 2)
-      // const delay = distance * 2
-
-      const noiseZoom2 = 0.5
-      // 1000 is to differentiate it from the noise used for the z coordinate
-      // TODO handle this better
-      const delay =
-        (noise(1000 + x * noiseZoom2, 1000 + y * noiseZoom2) * 0.5 + 0.5) * DELAY_MULTIPLICATOR
-
-      // const delay = Math.random() * 3
-
+      const delay = this.generateDelay(x, y, z)
       this.delays.push(delay)
 
       // put it at its final position
@@ -118,6 +112,29 @@ export class Boxes extends THREE.Group {
       points.push(new THREE.Vector3(x + offsetX, y * scaleY + noiseY, z))
     }
     return points
+  }
+
+  generateDelay(x, y, z) {
+    // const distancePoint = new THREE.Vector3(
+    //   width * 0 - width / 2,
+    //   height * 0.5 - height / 2,
+    //   z
+    // )
+    // const arrivingPosition = new THREE.Vector3(x, y, z)
+    // const distance = arrivingPosition.distanceTo(distancePoint)
+
+    // const delay = Math.pow(distance, 2)
+    // const delay = distance * 2
+
+    const noiseZoom2 = 0.5
+    // 1000 is to differentiate it from the noise used for the z coordinate
+    // TODO handle this better
+    const delay =
+      (noise(1000 + x * noiseZoom2, 1000 + y * noiseZoom2) * 0.5 + 0.5) * DELAY_MULTIPLICATOR
+
+    // const delay = Math.random() * 3
+
+    return delay
   }
 
   update(dt, time) {
