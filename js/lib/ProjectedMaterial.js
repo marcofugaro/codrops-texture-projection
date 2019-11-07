@@ -1,4 +1,7 @@
 import * as THREE from 'three'
+import lambertVert from 'three/src/renderers/shaders/ShaderLib/meshlambert_vert.glsl'
+import lambertFrag from 'three/src/renderers/shaders/ShaderLib/meshlambert_frag.glsl'
+import { monkeyPatch } from './three-utils'
 
 export class ProjectedMaterial extends THREE.ShaderMaterial {
   constructor({ camera, texture, color = 0xffffff, renderer, textureScale } = {}) {
@@ -16,6 +19,7 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
 
     const ratio = texture.image.naturalWidth / texture.image.naturalHeight
 
+    // TODO derive those from camera
     const gl = renderer.getContext()
     window.addEventListener('resize', () => {
       this.uniforms.resolution.value = new THREE.Vector2(
@@ -25,7 +29,9 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
     })
 
     super({
+      lights: true,
       uniforms: {
+        ...THREE.ShaderLib['lambert'].uniforms,
         resolution: {
           type: 'v2',
           value: new THREE.Vector2(gl.drawingBufferWidth, gl.drawingBufferHeight),
@@ -42,42 +48,42 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
         textureScale: { value: textureScale },
       },
 
-      vertexShader: `
-        uniform mat4 viewMatrixCamera;
-        uniform mat4 projectionMatrixCamera;
-        uniform mat4 modelMatrixCamera;
-        uniform mat4 savedModelMatrix;
+      vertexShader: monkeyPatch(lambertVert, {
+        header: `
+          uniform mat4 viewMatrixCamera;
+          uniform mat4 projectionMatrixCamera;
+          uniform mat4 modelMatrixCamera;
+          uniform mat4 savedModelMatrix;
 
-        varying vec4 vWorldPosition;
-        varying vec3 vNormal;
-        varying vec4 vTexCoords;
-
-        void main() {
+          varying vec4 vWorldPosition;
+          varying vec3 vNormal;
+          varying vec4 vTexCoords;
+        `,
+        main: `
           vNormal = mat3(savedModelMatrix) * normal;
           vWorldPosition = savedModelMatrix * vec4(position, 1.0);
           vTexCoords = projectionMatrixCamera * viewMatrixCamera * vWorldPosition;
+        `,
+      }),
 
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
+      fragmentShader: monkeyPatch(lambertFrag, {
+        header: `
+          uniform vec2 resolution;
+          uniform vec3 baseColor;
+          uniform sampler2D texture;
+          uniform vec3 projPosition;
+          uniform float ratio;
+          uniform float textureScale;
 
-      fragmentShader: `
-        uniform vec2 resolution;
-        uniform vec3 baseColor;
-        uniform sampler2D texture;
-        uniform vec3 projPosition;
-        uniform float ratio;
-        uniform float textureScale;
+          varying vec3 vNormal;
+          varying vec4 vWorldPosition;
+          varying vec4 vTexCoords;
 
-        varying vec3 vNormal;
-        varying vec4 vWorldPosition;
-        varying vec4 vTexCoords;
-
-        float map(float value, float min1, float max1, float min2, float max2) {
-          return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
-        }
-
-        void main() {
+          float map(float value, float min1, float max1, float min2, float max2) {
+            return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+          }
+        `,
+        'vec4 diffuseColor = vec4( diffuse, opacity );': `
           vec2 uv = (vTexCoords.xy / vTexCoords.w) * 0.5 + 0.5;
 
           // keep the image proportions and apply textureScale
@@ -111,9 +117,11 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
             color = vec4(baseColor, 1.0);
           }
 
-          gl_FragColor = color;
-        }
-      `,
+          // TODO handle opacity
+          // vec4 diffuseColor = vec4( diffuse, opacity );
+          vec4 diffuseColor = color;
+        `,
+      }),
     })
   }
 

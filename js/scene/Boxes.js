@@ -31,18 +31,18 @@ export class Boxes extends THREE.Group {
     let width
     let height
     if (ratio < 1) {
-      height = visibleHeightAtZDepth(webgl.camera.position.z, webgl.camera) * TEXTURE_SCALE
+      height = visibleHeightAtZDepth(0, webgl.camera) * TEXTURE_SCALE
       width = height * ratio
     } else {
-      width = visibleWidthAtZDepth(webgl.camera.position.z, webgl.camera) * TEXTURE_SCALE
+      width = visibleWidthAtZDepth(0, webgl.camera) * TEXTURE_SCALE
       height = width * (1 / ratio)
     }
 
     // get the points xy coordinates based on poisson-disc sampling
-    console.time('⏱Poisson-disc sampling')
+    if (window.DEBUG) console.time('⏱Poisson-disc sampling')
     const pointsXY = poisson([width, height])
-    console.timeEnd('⏱Poisson-disc sampling')
-    console.log(`Generated ${pointsXY.length} points`)
+    if (window.DEBUG) console.timeEnd('⏱Poisson-disc sampling')
+    if (window.DEBUG) console.log(`Generated ${pointsXY.length} points`)
 
     pointsXY.forEach(point => {
       // the arriving point
@@ -61,6 +61,8 @@ export class Boxes extends THREE.Group {
         // TODO implement cover: true
       })
       const box = new THREE.Mesh(geometry, material)
+      box.castShadow = true
+      box.receiveShadow = true
       this.boxes.push(box)
       this.add(box)
 

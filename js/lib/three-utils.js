@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 
+// from https://stackoverflow.com/questions/11179327/orient-objects-rotation-to-a-spline-point-tangent-in-three-js
 export function alignOnCurve(object, curve, percentage) {
   // set the object position
   const point = curve.getPoint(percentage)
@@ -19,7 +20,16 @@ export function alignOnCurve(object, curve, percentage) {
   object.quaternion.setFromAxisAngle(axis, radians)
 }
 
+// from https://discourse.threejs.org/t/functions-to-calculate-the-visible-width-height-at-a-given-z-depth-from-a-perspective-camera/269
 export function visibleHeightAtZDepth(depth, camera) {
+  // compensate for cameras not positioned at z=0
+  const cameraOffset = camera.position.z
+  if (depth < cameraOffset) {
+    depth -= cameraOffset
+  } else {
+    depth += cameraOffset
+  }
+
   // vertical fov in radians
   const vFOV = (camera.fov * Math.PI) / 180
 
@@ -30,4 +40,21 @@ export function visibleHeightAtZDepth(depth, camera) {
 export function visibleWidthAtZDepth(depth, camera) {
   const height = visibleHeightAtZDepth(depth, camera)
   return height * camera.aspect
+}
+
+export function monkeyPatch(shader, { header = '', main = '', ...replaces }) {
+  let patchedShader = shader
+
+  Object.keys(replaces).forEach(key => {
+    patchedShader = patchedShader.replace(key, replaces[key])
+  })
+
+  return patchedShader.replace(
+    'void main() {',
+    `
+    ${header}
+    void main() {
+      ${main}
+    `
+  )
 }
