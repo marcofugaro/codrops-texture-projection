@@ -4,7 +4,8 @@ import lambertFrag from 'three/src/renderers/shaders/ShaderLib/meshlambert_frag.
 import { monkeyPatch } from './three-utils'
 
 export class ProjectedMaterial extends THREE.ShaderMaterial {
-  constructor({ camera, texture, color = 0xffffff, renderer, textureScale } = {}) {
+  // TODO implement cover: true
+  constructor({ camera, texture, color = 0xffffff, textureScale } = {}) {
     // make sure the camera matrices are updated
     camera.updateProjectionMatrix()
     camera.updateMatrixWorld()
@@ -19,23 +20,12 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
 
     const ratio = texture.image.naturalWidth / texture.image.naturalHeight
 
-    // TODO derive those from camera
-    const gl = renderer.getContext()
-    window.addEventListener('resize', () => {
-      this.uniforms.resolution.value = new THREE.Vector2(
-        gl.drawingBufferWidth,
-        gl.drawingBufferHeight
-      )
-    })
+    const ratioCamera = camera.aspect
 
     super({
       lights: true,
       uniforms: {
         ...THREE.ShaderLib['lambert'].uniforms,
-        resolution: {
-          type: 'v2',
-          value: new THREE.Vector2(gl.drawingBufferWidth, gl.drawingBufferHeight),
-        },
         baseColor: { value: new THREE.Color(color) },
         viewMatrixCamera: { type: 'm4', value: viewMatrixCamera },
         projectionMatrixCamera: { type: 'm4', value: projectionMatrixCamera },
@@ -45,6 +35,7 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
         texture: { value: texture },
         projPosition: { type: 'v3', value: projPosition },
         ratio: { value: ratio },
+        ratioCamera: { value: ratioCamera },
         textureScale: { value: textureScale },
       },
 
@@ -68,11 +59,11 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
 
       fragmentShader: monkeyPatch(lambertFrag, {
         header: `
-          uniform vec2 resolution;
           uniform vec3 baseColor;
           uniform sampler2D texture;
           uniform vec3 projPosition;
           uniform float ratio;
+          uniform float ratioCamera;
           uniform float textureScale;
 
           varying vec3 vNormal;
@@ -86,16 +77,19 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
         'vec4 diffuseColor = vec4( diffuse, opacity );': `
           vec2 uv = (vTexCoords.xy / vTexCoords.w) * 0.5 + 0.5;
 
+
           // keep the image proportions and apply textureScale
+          float widthCamera = 1.0;
+          float heightCamera = widthCamera * (1.0 / ratioCamera);
           if (ratio < 1.0) {
-            float width = resolution.y * ratio;
-            float widthPercent = 1.0 / (width / resolution.x * textureScale);
+            float width = heightCamera * ratio;
+            float widthPercent = 1.0 / (width / widthCamera * textureScale);
             uv.x = map(uv.x, 0.0, 1.0, 0.5 - widthPercent / 2.0, 0.5 + widthPercent / 2.0);
             float heightPercent = 1.0 / textureScale;
             uv.y = map(uv.y, 0.0, 1.0, 0.5 - heightPercent / 2.0, 0.5 + heightPercent / 2.0);
           } else {
-            float height = resolution.x * (1.0 / ratio);
-            float heightPercent = 1.0 / ((height / resolution.y) * 0.5);
+            float height = widthCamera * (1.0 / ratio);
+            float heightPercent = 1.0 / ((height / heightCamera) * 0.5);
             uv.y = map(uv.y, 0.0, 1.0, 0.5 - heightPercent / 2.0, 0.5 + heightPercent / 2.0);
             float widthPercent = 1.0 / textureScale;
             uv.x = map(uv.x, 0.0, 1.0, 0.5 - widthPercent / 2.0, 0.5 + widthPercent / 2.0);
@@ -122,6 +116,15 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
           vec4 diffuseColor = color;
         `,
       }),
+    })
+
+    // listen on resize if the camera used for the projection
+    // is the same used to render.
+    // do this on window resize because there is no way to
+    // listen for the resize of the renderer
+    window.addEventListener('resize', () => {
+      this.uniforms.projectionMatrixCamera.value.copy(camera.projectionMatrix)
+      this.uniforms.ratioCamera.value = camera.aspect
     })
   }
 

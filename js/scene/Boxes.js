@@ -57,8 +57,6 @@ export class Boxes extends THREE.Group {
         texture,
         textureScale: TEXTURE_SCALE,
         color: 0x222222,
-        renderer: webgl.renderer,
-        // TODO implement cover: true
       })
       const box = new THREE.Mesh(geometry, material)
       box.castShadow = true
