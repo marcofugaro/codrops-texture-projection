@@ -42,6 +42,24 @@ export function visibleWidthAtZDepth(depth, camera) {
   return height * camera.aspect
 }
 
+// from https://stackoverflow.com/questions/13055214/mouse-canvas-x-y-to-three-js-world-x-y-z
+export function mouseToCoordinates({ x, y, targetZ = 0, camera, width, height }) {
+  const vec = new THREE.Vector3()
+  const pos = new THREE.Vector3()
+
+  vec.set((x / width) * 2 - 1, -(y / height) * 2 + 1, 0.5)
+
+  vec.unproject(camera)
+
+  vec.sub(camera.position).normalize()
+
+  const distance = (targetZ - camera.position.z) / vec.z
+
+  pos.copy(camera.position).add(vec.multiplyScalar(distance))
+
+  return pos
+}
+
 export function monkeyPatch(shader, { header = '', main = '', ...replaces }) {
   let patchedShader = shader
 

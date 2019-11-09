@@ -2,13 +2,21 @@ import * as THREE from 'three'
 import { mapRange } from 'canvas-sketch-util/math'
 import * as eases from 'eases'
 import { ProjectedMaterial } from '../lib/ProjectedMaterial'
-import { alignOnCurve, visibleHeightAtZDepth, visibleWidthAtZDepth } from '../lib/three-utils'
+import {
+  alignOnCurve,
+  visibleHeightAtZDepth,
+  visibleWidthAtZDepth,
+  mouseToCoordinates,
+} from '../lib/three-utils'
 import assets from '../lib/AssetManager'
 import { noise, poisson } from '../lib/utils'
 
 const ANIMATION_DURATION = 2 // seconds
 const DELAY_MULTIPLICATOR = 2.5
 const TEXTURE_SCALE = 0.7
+
+const DISPLACEMENT_RADIUS = 0.3
+const MOUSEPOINT_DECAY = 1 // seconds
 
 // preload the texture
 const textureKey = assets.queue({
@@ -20,6 +28,7 @@ export class Boxes extends THREE.Group {
   boxes = []
   curves = []
   delays = []
+  mousePoints = []
 
   constructor({ webgl, ...options }) {
     super(options)
@@ -48,7 +57,7 @@ export class Boxes extends THREE.Group {
       // the arriving point
       const [x, y] = [point[0] - width / 2, point[1] - height / 2]
       const noiseZoom = 0.5
-      const z = noise(x * noiseZoom, y * noiseZoom) * 0.4
+      const z = noise(x * noiseZoom, y * noiseZoom) * 0.2
 
       // create the box!
       const geometry = new THREE.BoxBufferGeometry(0.1, 0.2, 0.1)
@@ -71,15 +80,13 @@ export class Boxes extends THREE.Group {
 
       // show the curves only in debug mode
       if (window.DEBUG) {
-        const points = curve.getPoints(50)
-        const curveGeometry = new THREE.BufferGeometry().setFromPoints(points)
+        const curveGeometry = new THREE.BufferGeometry().setFromPoints(curve.points)
         const curveMaterial = new THREE.LineBasicMaterial({
           color: 0xffffff,
           transparent: true,
           opacity: 0.2,
         })
         const curveMesh = new THREE.Line(curveGeometry, curveMaterial)
-
         this.add(curveMesh)
       }
 
@@ -96,14 +103,41 @@ export class Boxes extends THREE.Group {
     })
   }
 
+  onPointerMove(event, [x, y]) {
+    const mousePoint = {
+      timestamp: this.webgl.time,
+      scale: 1,
+    }
+
+    mousePoint.position = mouseToCoordinates({
+      x,
+      y,
+      camera: this.webgl.camera,
+      width: this.webgl.width,
+      height: this.webgl.height,
+    })
+
+    if (window.DEBUG) {
+      const mouseSphere = new THREE.Mesh(
+        new THREE.SphereBufferGeometry(DISPLACEMENT_RADIUS, 16, 16),
+        new THREE.MeshBasicMaterial({ color: 0xfffff00, transparent: true, opacity: 0.3 })
+      )
+      mouseSphere.position.copy(mousePoint.position)
+      this.add(mouseSphere)
+      mousePoint.mesh = mouseSphere
+    }
+
+    this.mousePoints.push(mousePoint)
+  }
+
   generateCurve(x, y, z) {
     const points = []
-    const segments = 20
+    const segments = 50
     const startX = -5
     for (let i = 0; i < segments; i++) {
       const offsetX = mapRange(i, 0, segments - 1, startX, 0)
 
-      const noiseZoom = 0.1
+      const noiseZoom = 0.1 / (segments / 20)
       const noiseY = noise(i * noiseZoom) * 0.6 * eases.quartOut(mapRange(i, 0, segments - 1, 1, 0))
       const scaleY = mapRange(eases.quartIn(mapRange(i, 0, segments - 1, 0, 1)), 0, 1, 0.2, 1)
 
@@ -144,6 +178,32 @@ export class Boxes extends THREE.Group {
 
       const percentage = mapRange(time, 0 + delay, ANIMATION_DURATION + delay, 0, 1, true)
       alignOnCurve(box, curve, percentage)
+
+      this.mousePoints.forEach(mousePoint => {
+        // TODO make the box ease
+        if (box.position.distanceTo(mousePoint.position) < DISPLACEMENT_RADIUS * mousePoint.scale) {
+          const direction = box.position.clone().sub(mousePoint.position)
+          // TODO displace them not at the end of a sphere
+          const displacementAmount = DISPLACEMENT_RADIUS * mousePoint.scale - direction.length()
+          direction.setLength(displacementAmount)
+          box.position.add(direction)
+        }
+      })
+    })
+
+    this.mousePoints.forEach((mousePoint, i) => {
+      const scale = eases.quadIn(
+        mapRange(time, mousePoint.timestamp, mousePoint.timestamp + MOUSEPOINT_DECAY, 1, 0, true)
+      )
+
+      if (scale <= 0) {
+        if (window.DEBUG) this.remove(mousePoint.mesh)
+        this.mousePoints.splice(i, 1)
+        return
+      }
+
+      mousePoint.scale = scale
+      if (window.DEBUG) mousePoint.mesh.scale.setScalar(scale)
     })
   }
 }
