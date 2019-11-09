@@ -11,12 +11,15 @@ import {
 import assets from '../lib/AssetManager'
 import { noise, poisson } from '../lib/utils'
 
+// how much the animation of a single box lasts
 const ANIMATION_DURATION = 2 // seconds
+// how much there is between the first and the last to arravi
 const DELAY_MULTIPLICATOR = 2.5
+// texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
 
-const DISPLACEMENT_RADIUS = 0.3
-const MOUSEPOINT_DECAY = 1 // seconds
+// how much to start displacing on mousemove
+const DISPLACEMENT_RADIUS = 0.5
 
 // preload the texture
 const textureKey = assets.queue({
@@ -26,9 +29,11 @@ const textureKey = assets.queue({
 
 export class Boxes extends THREE.Group {
   boxes = []
-  curves = []
   delays = []
-  mousePoints = []
+  // the displaced curves
+  curves = []
+  // the pristine curves
+  targetCurves = []
 
   constructor({ webgl, ...options }) {
     super(options)
@@ -36,6 +41,7 @@ export class Boxes extends THREE.Group {
 
     const texture = assets.get(textureKey)
 
+    // calculate the width and height the boxes will stay in
     const ratio = texture.image.naturalWidth / texture.image.naturalHeight
     let width
     let height
@@ -77,16 +83,18 @@ export class Boxes extends THREE.Group {
       const curvePoints = this.generateCurve(x, y, z)
       const curve = new THREE.CatmullRomCurve3(curvePoints)
       this.curves.push(curve)
+      this.targetCurves.push(curve.clone())
 
       // show the curves only in debug mode
       if (window.DEBUG) {
-        const curveGeometry = new THREE.BufferGeometry().setFromPoints(curve.points)
+        const curveGeometry = new THREE.Geometry().setFromPoints(curve.points)
         const curveMaterial = new THREE.LineBasicMaterial({
           color: 0xffffff,
           transparent: true,
           opacity: 0.2,
         })
         const curveMesh = new THREE.Line(curveGeometry, curveMaterial)
+        curve.mesh = curveMesh
         this.add(curveMesh)
       }
 
@@ -104,12 +112,8 @@ export class Boxes extends THREE.Group {
   }
 
   onPointerMove(event, [x, y]) {
-    const mousePoint = {
-      timestamp: this.webgl.time,
-      scale: 1,
-    }
-
-    mousePoint.position = mouseToCoordinates({
+    // TODO put the z based on the last raycast
+    this.mousePoint = mouseToCoordinates({
       x,
       y,
       camera: this.webgl.camera,
@@ -118,16 +122,16 @@ export class Boxes extends THREE.Group {
     })
 
     if (window.DEBUG) {
-      const mouseSphere = new THREE.Mesh(
-        new THREE.SphereBufferGeometry(DISPLACEMENT_RADIUS, 16, 16),
-        new THREE.MeshBasicMaterial({ color: 0xfffff00, transparent: true, opacity: 0.3 })
-      )
-      mouseSphere.position.copy(mousePoint.position)
-      this.add(mouseSphere)
-      mousePoint.mesh = mouseSphere
-    }
+      if (!this.mouseSphere) {
+        this.mouseSphere = new THREE.Mesh(
+          new THREE.SphereBufferGeometry(DISPLACEMENT_RADIUS, 16, 16),
+          new THREE.MeshBasicMaterial({ color: 0xfffff00, transparent: true, opacity: 0.1 })
+        )
+        this.add(this.mouseSphere)
+      }
 
-    this.mousePoints.push(mousePoint)
+      this.mouseSphere.position.copy(this.mousePoint)
+    }
   }
 
   generateCurve(x, y, z) {
@@ -174,36 +178,44 @@ export class Boxes extends THREE.Group {
   update(dt, time) {
     this.boxes.forEach((box, i) => {
       const curve = this.curves[i]
+      const targetCurve = this.targetCurves[i]
       const delay = this.delays[i]
 
-      const percentage = mapRange(time, 0 + delay, ANIMATION_DURATION + delay, 0, 1, true)
-      alignOnCurve(box, curve, percentage)
+      // if the user has interacted
+      if (this.mousePoint) {
+        // displace the curve where the user has interacted
+        curve.points.forEach((point, j) => {
+          const targetPoint = targetCurve.points[j]
 
-      this.mousePoints.forEach(mousePoint => {
-        // TODO make the box ease
-        if (box.position.distanceTo(mousePoint.position) < DISPLACEMENT_RADIUS * mousePoint.scale) {
-          const direction = box.position.clone().sub(mousePoint.position)
-          // TODO displace them not at the end of a sphere
-          const displacementAmount = DISPLACEMENT_RADIUS * mousePoint.scale - direction.length()
-          direction.setLength(displacementAmount)
-          box.position.add(direction)
+          // displace the curve points
+          if (point.distanceTo(this.mousePoint) < DISPLACEMENT_RADIUS) {
+            const direction = point.clone().sub(this.mousePoint)
+            const displacementAmount = DISPLACEMENT_RADIUS - direction.length()
+            direction.setLength(displacementAmount)
+            direction.add(point)
+
+            point.lerp(direction, dt * 2)
+          }
+
+          // and move them back to their original position
+          if (point.distanceTo(targetPoint) > 0.01) {
+            point.lerp(targetPoint, dt * 5)
+          }
+        })
+
+        // update the debug mode lines
+        if (window.DEBUG) {
+          curve.points.forEach((point, j) => {
+            const vertex = curve.mesh.geometry.vertices[j]
+            vertex.copy(point)
+          })
+          curve.mesh.geometry.verticesNeedUpdate = true
         }
-      })
-    })
-
-    this.mousePoints.forEach((mousePoint, i) => {
-      const scale = eases.quadIn(
-        mapRange(time, mousePoint.timestamp, mousePoint.timestamp + MOUSEPOINT_DECAY, 1, 0, true)
-      )
-
-      if (scale <= 0) {
-        if (window.DEBUG) this.remove(mousePoint.mesh)
-        this.mousePoints.splice(i, 1)
-        return
       }
 
-      mousePoint.scale = scale
-      if (window.DEBUG) mousePoint.mesh.scale.setScalar(scale)
+      // align the box on the curve
+      const percentage = mapRange(time, 0 + delay, ANIMATION_DURATION + delay, 0, 1, true)
+      alignOnCurve(box, curve, percentage)
     })
   }
 }
