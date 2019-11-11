@@ -137,6 +137,7 @@ export class Boxes extends THREE.Group {
   generateCurve(x, y, z) {
     const points = []
     const segments = 50
+    // TODO start x based on screen width
     const startX = -5
     for (let i = 0; i < segments; i++) {
       const offsetX = mapRange(i, 0, segments - 1, startX, 0)
@@ -194,12 +195,12 @@ export class Boxes extends THREE.Group {
             direction.setLength(displacementAmount)
             direction.add(point)
 
-            point.lerp(direction, dt * 2)
+            point.lerp(direction, dt * 6)
           }
 
           // and move them back to their original position
           if (point.distanceTo(targetPoint) > 0.01) {
-            point.lerp(targetPoint, dt * 5)
+            point.lerp(targetPoint, dt * 3)
           }
         })
 

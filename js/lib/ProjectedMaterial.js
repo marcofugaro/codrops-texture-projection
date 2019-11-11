@@ -78,6 +78,7 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
           vec2 uv = (vTexCoords.xy / vTexCoords.w) * 0.5 + 0.5;
 
 
+          // TODO don't pass those as uniforms to avoid branching, or maybe do these calculations in js
           // keep the image proportions and apply textureScale
           float widthCamera = 1.0;
           float heightCamera = widthCamera * (1.0 / ratioCamera);
