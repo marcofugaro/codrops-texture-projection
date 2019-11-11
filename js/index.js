@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import WebGLApp from './lib/WebGLApp'
 import assets from './lib/AssetManager'
-import { Boxes } from './scene/Boxes'
 import { addLights } from './scene/lights'
+import { Slides } from './scene/Slides'
 
 window.DEBUG = window.location.search.includes('debug')
 
@@ -45,14 +45,14 @@ assets.load({ renderer: webgl.renderer }).then(() => {
   // add any "WebGL components" here...
   // append them to the scene so you can
   // use them from other components easily
-  webgl.scene.boxes = new Boxes({ webgl })
-  webgl.scene.add(webgl.scene.boxes)
+  webgl.scene.slides = new Slides({ webgl })
+  webgl.scene.add(webgl.scene.slides)
 
   // TODO remove this
   webgl.controls.$onChanges(() => {
     webgl.renderer.setClearColor(webgl.controls.background, 1)
 
-    webgl.scene.boxes.boxes.forEach(box => {
+    webgl.scene.slides.slide.boxes.forEach(box => {
       box.material.uniforms.baseColor.value = new THREE.Color(webgl.controls.materialColor)
     })
   })

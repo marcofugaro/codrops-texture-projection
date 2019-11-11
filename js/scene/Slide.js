@@ -8,26 +8,19 @@ import {
   visibleWidthAtZDepth,
   mouseToCoordinates,
 } from '../lib/three-utils'
-import assets from '../lib/AssetManager'
-import { noise, poisson } from '../lib/utils'
+import { noise, poisson, mapRangeTriple } from '../lib/utils'
+import { ANIMATION_DURATION } from './Slides'
 
-// how much the animation of a single box lasts
-const ANIMATION_DURATION = 2 // seconds
-// how much there is between the first and the last to arravi
-const DELAY_MULTIPLICATOR = 2.5
+// how much there is between the first and the last to arrive
+const DELAY_MULTIPLICATOR = 2.2
+
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
 
 // how much to start displacing on mousemove
 const DISPLACEMENT_RADIUS = 0.5
 
-// preload the texture
-const textureKey = assets.queue({
-  url: 'images/justin-essah-unsplash.jpg',
-  type: 'texture',
-})
-
-export class Boxes extends THREE.Group {
+export class Slide extends THREE.Group {
   boxes = []
   delays = []
   // the displaced curves
@@ -35,11 +28,9 @@ export class Boxes extends THREE.Group {
   // the pristine curves
   targetCurves = []
 
-  constructor({ webgl, ...options }) {
+  constructor({ texture, webgl, ...options }) {
     super(options)
     this.webgl = webgl
-
-    const texture = assets.get(textureKey)
 
     // calculate the width and height the boxes will stay in
     const ratio = texture.image.naturalWidth / texture.image.naturalHeight
@@ -59,7 +50,7 @@ export class Boxes extends THREE.Group {
     if (window.DEBUG) console.timeEnd('⏱Poisson-disc sampling')
     if (window.DEBUG) console.log(`Generated ${pointsXY.length} points`)
 
-    pointsXY.forEach(point => {
+    pointsXY.forEach((point, i) => {
       // the arriving point
       const [x, y] = [point[0] - width / 2, point[1] - height / 2]
       const noiseZoom = 0.5
@@ -85,8 +76,8 @@ export class Boxes extends THREE.Group {
       this.curves.push(curve)
       this.targetCurves.push(curve.clone())
 
-      // show the curves only in debug mode
-      if (window.DEBUG) {
+      // show the curves only in debug mode and not all of them
+      if (window.DEBUG && i % 10 === 0) {
         const curveGeometry = new THREE.Geometry().setFromPoints(curve.points)
         const curveMaterial = new THREE.LineBasicMaterial({
           color: 0xffffff,
@@ -102,23 +93,30 @@ export class Boxes extends THREE.Group {
       const delay = this.generateDelay(x, y, z)
       this.delays.push(delay)
 
-      // put it at its final position
-      alignOnCurve(box, curve, 1)
+      // put it at its center position
+      alignOnCurve(box, curve, 0.5)
 
       // project the texture!
       box.updateMatrixWorld()
       box.material.project(box.matrixWorld)
+
+      // put it at the start again
+      alignOnCurve(box, curve, 0)
     })
+
+    // TODO handle this better
+    const minDelay = Math.min(...this.delays)
+    this.delays = this.delays.map(delay => delay - minDelay)
   }
 
   onPointerMove(event, [x, y]) {
-    // TODO put the z based on the last raycast
     this.mousePoint = mouseToCoordinates({
       x,
       y,
       camera: this.webgl.camera,
       width: this.webgl.width,
       height: this.webgl.height,
+      targetZ: -0.1,
     })
 
     if (window.DEBUG) {
@@ -136,23 +134,46 @@ export class Boxes extends THREE.Group {
 
   generateCurve(x, y, z) {
     const points = []
-    const segments = 50
-    // TODO start x based on screen width
-    const startX = -5
+
+    // must be odds so we have the middle frame
+    const segments = 51
+
+    const outOfViewX =
+      mouseToCoordinates({
+        x: 0,
+        y: this.webgl.width / 2,
+        camera: this.webgl.camera,
+        width: this.webgl.width,
+        height: this.webgl.height,
+      }).x * 1.4
+
+    const startX = outOfViewX
+    const endX = outOfViewX * -1
+
+    const startZ = -0.5
+    const endZ = startZ * -1
+
     for (let i = 0; i < segments; i++) {
-      const offsetX = mapRange(i, 0, segments - 1, startX, 0)
+      const offsetX = mapRange(i, 0, segments - 1, startX, endX)
+      const halfIndex = segments / 2
 
-      const noiseZoom = 0.1 / (segments / 20)
-      const noiseY = noise(i * noiseZoom) * 0.6 * eases.quartOut(mapRange(i, 0, segments - 1, 1, 0))
-      const scaleY = mapRange(eases.quartIn(mapRange(i, 0, segments - 1, 0, 1)), 0, 1, 0.2, 1)
+      const noiseAmount = mapRangeTriple(i, 0, halfIndex, segments - 1, 1, 0, 1)
+      const noiseZoom = 0.3
+      const noiseAmplitude = 0.6
+      const noiseY = noise(offsetX * noiseZoom) * noiseAmplitude * eases.quartOut(noiseAmount)
+      const scaleY = mapRange(eases.quartIn(1 - noiseAmount), 0, 1, 0.2, 1)
 
+      // TODO try to do a spiral
       // const noiseZ = noise(1000 + i * noiseZoom) * 0.3
 
-      points.push(new THREE.Vector3(x + offsetX, y * scaleY + noiseY, z))
+      const offsetZ = mapRange(i, 0, segments - 1, startZ, endZ)
+
+      points.push(new THREE.Vector3(x + offsetX, y * scaleY + noiseY, z + offsetZ))
     }
     return points
   }
 
+  // TODO maybe play with speed rather than delay
   generateDelay(x, y, z) {
     // const distancePoint = new THREE.Vector3(
     //   width * 0 - width / 2,
@@ -174,6 +195,30 @@ export class Boxes extends THREE.Group {
     // const delay = Math.random() * 3
 
     return delay
+  }
+
+  enter() {
+    this.tStart = this.webgl.time
+    this.isEntering = true
+    this.isReversef = false
+  }
+
+  exit() {
+    this.tStart = this.webgl.time
+    this.isEntering = false
+    this.isReversef = false
+  }
+
+  enterReversed() {
+    this.tStart = this.webgl.time
+    this.isEntering = true
+    this.isReversed = true
+  }
+
+  exitReversed() {
+    this.tStart = this.webgl.time
+    this.isEntering = false
+    this.isReversed = true
   }
 
   update(dt, time) {
@@ -205,7 +250,7 @@ export class Boxes extends THREE.Group {
         })
 
         // update the debug mode lines
-        if (window.DEBUG) {
+        if (window.DEBUG && curve.mesh) {
           curve.points.forEach((point, j) => {
             const vertex = curve.mesh.geometry.vertices[j]
             vertex.copy(point)
@@ -215,7 +260,29 @@ export class Boxes extends THREE.Group {
       }
 
       // align the box on the curve
-      const percentage = mapRange(time, 0 + delay, ANIMATION_DURATION + delay, 0, 1, true)
+      let percentage = 0
+      if (this.tStart) {
+        if (this.isEntering) {
+          percentage = mapRange(
+            time - this.tStart,
+            0 + delay,
+            ANIMATION_DURATION + delay,
+            this.isReversed ? 0.5 : 0,
+            this.isReversed ? 0 : 0.5,
+            true
+          )
+        } else {
+          percentage = mapRange(
+            time - this.tStart,
+            0 + delay,
+            ANIMATION_DURATION + delay,
+            this.isReversed ? 1 : 0.5,
+            this.isReversed ? 0.5 : 1,
+            true
+          )
+        }
+      }
+
       alignOnCurve(box, curve, percentage)
     })
   }

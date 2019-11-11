@@ -1,5 +1,6 @@
 import SimplexNoise from 'simplex-noise'
 import Poisson from 'poisson-disk-sampling'
+import { mapRange } from 'canvas-sketch-util/math'
 
 const simplex = new SimplexNoise()
 export function noise(...args) {
@@ -28,4 +29,21 @@ export function poisson(range) {
   return new Poisson(rangeScaled, minUnit * 0.04, minUnit * 0.05, 10)
     .fill()
     .map(p => p.map(scaleInvert))
+}
+
+export function mapRangeTriple(
+  value,
+  inputMin,
+  inputMiddle,
+  inputMax,
+  outputMin,
+  outputMiddle,
+  outputMax,
+  clamp = false
+) {
+  if (inputMin <= value && value < inputMiddle) {
+    return mapRange(value, inputMin, inputMiddle, outputMin, outputMiddle, clamp)
+  } else {
+    return mapRange(value, inputMiddle, inputMax, outputMiddle, outputMax, clamp)
+  }
 }
