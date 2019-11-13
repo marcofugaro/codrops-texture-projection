@@ -1,7 +1,11 @@
 import * as THREE from 'three'
 import { mapRange } from 'canvas-sketch-util/math'
 import * as eases from 'eases'
-import { ProjectedMaterial } from '../lib/ProjectedMaterial'
+import {
+  ProjectedMaterial,
+  projectInstanceAt,
+  allocateProjectionData,
+} from '../lib/ProjectedMaterial'
 import {
   alignOnCurve,
   visibleHeightAtZDepth,
@@ -21,12 +25,14 @@ const TEXTURE_SCALE = 0.7
 const DISPLACEMENT_RADIUS = 0.5
 
 export class Slide extends THREE.Group {
-  boxes = []
   delays = []
   // the displaced curves
   curves = []
   // the pristine curves
   targetCurves = []
+  // TODO REFACTOR AAAAA
+  dummy = new THREE.Object3D()
+  mesh
 
   constructor({ texture, webgl, ...options }) {
     super(options)
@@ -50,25 +56,28 @@ export class Slide extends THREE.Group {
     if (window.DEBUG) console.timeEnd('⏱Poisson-disc sampling')
     if (window.DEBUG) console.log(`Generated ${pointsXY.length} points`)
 
+    // create the boxes!
+    const geometry = new THREE.BoxBufferGeometry(0.1, 0.2, 0.1)
+    const material = new ProjectedMaterial({
+      camera: webgl.camera,
+      texture,
+      textureScale: TEXTURE_SCALE,
+      color: 0x222222,
+      instanced: true,
+    })
+
+    allocateProjectionData(geometry, pointsXY.length)
+
+    this.mesh = new THREE.InstancedMesh(geometry, material, pointsXY.length)
+    this.mesh.castShadow = true
+    this.mesh.receiveShadow = true
+    this.add(this.mesh)
+
     pointsXY.forEach((point, i) => {
       // the arriving point
       const [x, y] = [point[0] - width / 2, point[1] - height / 2]
       const noiseZoom = 0.5
       const z = noise(x * noiseZoom, y * noiseZoom) * 0.2
-
-      // create the box!
-      const geometry = new THREE.BoxBufferGeometry(0.1, 0.2, 0.1)
-      const material = new ProjectedMaterial({
-        camera: webgl.camera,
-        texture,
-        textureScale: TEXTURE_SCALE,
-        color: 0x222222,
-      })
-      const box = new THREE.Mesh(geometry, material)
-      box.castShadow = true
-      box.receiveShadow = true
-      this.boxes.push(box)
-      this.add(box)
 
       // create the curves!
       const curvePoints = this.generateCurve(x, y, z)
@@ -94,14 +103,18 @@ export class Slide extends THREE.Group {
       this.delays.push(delay)
 
       // put it at its center position
-      alignOnCurve(box, curve, 0.5)
+      alignOnCurve(this.dummy, curve, 0.5)
+      this.dummy.updateMatrix()
+      this.mesh.setMatrixAt(i, this.dummy.matrix)
 
       // project the texture!
-      box.updateMatrixWorld()
-      box.material.project(box.matrixWorld)
+      this.dummy.updateMatrixWorld()
+      projectInstanceAt(i, this.mesh, this.dummy.matrixWorld)
 
       // put it at the start again
-      alignOnCurve(box, curve, 0)
+      alignOnCurve(this.dummy, curve, 0)
+      this.dummy.updateMatrix()
+      this.mesh.setMatrixAt(i, this.dummy.matrix)
     })
 
     // TODO handle this better
@@ -222,7 +235,7 @@ export class Slide extends THREE.Group {
   }
 
   update(dt, time) {
-    this.boxes.forEach((box, i) => {
+    for (let i = 0; i < this.mesh.count; i++) {
       const curve = this.curves[i]
       const targetCurve = this.targetCurves[i]
       const delay = this.delays[i]
@@ -283,7 +296,10 @@ export class Slide extends THREE.Group {
         }
       }
 
-      alignOnCurve(box, curve, percentage)
-    })
+      alignOnCurve(this.dummy, curve, percentage)
+      this.dummy.updateMatrix()
+      this.mesh.setMatrixAt(i, this.dummy.matrix)
+      this.mesh.instanceMatrix.needsUpdate = true
+    }
   }
 }

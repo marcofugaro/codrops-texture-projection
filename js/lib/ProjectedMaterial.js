@@ -4,8 +4,10 @@ import lambertFrag from 'three/src/renderers/shaders/ShaderLib/meshlambert_frag.
 import { monkeyPatch } from './three-utils'
 
 export class ProjectedMaterial extends THREE.ShaderMaterial {
+  isProjectedMaterial = true
+
   // TODO implement cover: true
-  constructor({ camera, texture, color = 0xffffff, textureScale } = {}) {
+  constructor({ camera, texture, color = 0xffffff, textureScale = 1, instanced = false } = {}) {
     // make sure the camera matrices are updated
     camera.updateProjectionMatrix()
     camera.updateMatrixWorld()
@@ -40,21 +42,44 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
       },
 
       vertexShader: monkeyPatch(lambertVert, {
-        header: `
+        header: [
+          instanced
+            ? `
+            attribute vec4 savedModelMatrix0;
+            attribute vec4 savedModelMatrix1;
+            attribute vec4 savedModelMatrix2;
+            attribute vec4 savedModelMatrix3;
+            `
+            : `
+            uniform mat4 savedModelMatrix;
+          `,
+          `
           uniform mat4 viewMatrixCamera;
           uniform mat4 projectionMatrixCamera;
           uniform mat4 modelMatrixCamera;
-          uniform mat4 savedModelMatrix;
 
           varying vec4 vWorldPosition;
           varying vec3 vNormal;
           varying vec4 vTexCoords;
-        `,
-        main: `
+          `,
+        ].join(''),
+        main: [
+          instanced
+            ? `
+            mat4 savedModelMatrix = mat4(
+              savedModelMatrix0,
+              savedModelMatrix1,
+              savedModelMatrix2,
+              savedModelMatrix3
+            );
+            `
+            : '',
+          `
           vNormal = mat3(savedModelMatrix) * normal;
           vWorldPosition = savedModelMatrix * vec4(position, 1.0);
           vTexCoords = projectionMatrixCamera * viewMatrixCamera * vWorldPosition;
-        `,
+          `,
+        ].join(''),
       }),
 
       fragmentShader: monkeyPatch(lambertFrag, {
@@ -128,10 +153,84 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
       this.uniforms.ratioCamera.value = camera.aspect
     })
   }
+}
 
-  project(modelMatrix) {
-    // we save the object model matrix so it's projected relative
-    // to that position, like a snapshot
-    this.uniforms.savedModelMatrix.value.copy(modelMatrix)
+export function project(mesh) {
+  if (!mesh.material.isProjectedMaterial) {
+    throw new Error(`The mesh material must be a ProjectedMaterial`)
   }
+
+  // make sure the matrix is updated
+  mesh.updateMatrixWorld()
+
+  // we save the object model matrix so it's projected relative
+  // to that position, like a snapshot
+  mesh.material.uniforms.savedModelMatrix.value.copy(mesh.modelMatrix)
+}
+
+export function projectInstanceAt(index, instancedMesh, matrixWorld) {
+  if (!instancedMesh.isInstancedMesh) {
+    throw new Error(`The provided mesh is not an InstancedMesh`)
+  }
+
+  if (!instancedMesh.material.isProjectedMaterial) {
+    throw new Error(`The InstancedMesh material must be a ProjectedMaterial`)
+  }
+
+  if (
+    !instancedMesh.geometry.attributes.savedModelMatrix0 ||
+    !instancedMesh.geometry.attributes.savedModelMatrix1 ||
+    !instancedMesh.geometry.attributes.savedModelMatrix2 ||
+    !instancedMesh.geometry.attributes.savedModelMatrix3
+  ) {
+    throw new Error(``)
+  }
+
+  instancedMesh.geometry.attributes.savedModelMatrix0.setXYZW(
+    index,
+    matrixWorld.elements[0],
+    matrixWorld.elements[1],
+    matrixWorld.elements[2],
+    matrixWorld.elements[3]
+  )
+  instancedMesh.geometry.attributes.savedModelMatrix1.setXYZW(
+    index,
+    matrixWorld.elements[4],
+    matrixWorld.elements[5],
+    matrixWorld.elements[6],
+    matrixWorld.elements[7]
+  )
+  instancedMesh.geometry.attributes.savedModelMatrix2.setXYZW(
+    index,
+    matrixWorld.elements[8],
+    matrixWorld.elements[9],
+    matrixWorld.elements[10],
+    matrixWorld.elements[11]
+  )
+  instancedMesh.geometry.attributes.savedModelMatrix3.setXYZW(
+    index,
+    matrixWorld.elements[12],
+    matrixWorld.elements[13],
+    matrixWorld.elements[14],
+    matrixWorld.elements[15]
+  )
+}
+
+export function allocateProjectionData(geometry, instancesCount) {
+  geometry.addAttribute(
+    'savedModelMatrix0',
+    new THREE.InstancedBufferAttribute(new Float32Array(instancesCount * 4), 4)
+  )
+  geometry.addAttribute(
+    'savedModelMatrix1',
+    new THREE.InstancedBufferAttribute(new Float32Array(instancesCount * 4), 4)
+  )
+  geometry.addAttribute(
+    'savedModelMatrix2',
+    new THREE.InstancedBufferAttribute(new Float32Array(instancesCount * 4), 4)
+  )
+  geometry.addAttribute(
+    'savedModelMatrix3',
+    new THREE.InstancedBufferAttribute(new Float32Array(instancesCount * 4), 4)
+  )
 }
