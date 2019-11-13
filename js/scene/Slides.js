@@ -29,6 +29,7 @@ export class Slides extends THREE.Group {
 
     const images = [image1, image2]
 
+    // initialize the slide components
     images.forEach(image => {
       const texture = assets.get(image)
       const slide = new Slide({ texture, webgl })
@@ -36,10 +37,13 @@ export class Slides extends THREE.Group {
       this.slides.push(slide)
     })
 
+    // make the first one enter
     setTimeout(() => {
       this.slides[this.slideIndex].enter()
     }, 0)
 
+    // change slides on the prev/next button click
+    // TODO disable the button when the animation is playing or something
     const prevButton = document.querySelector('.content__prev')
     const nextButton = document.querySelector('.content__next')
 
@@ -50,6 +54,7 @@ export class Slides extends THREE.Group {
         this.slides[this.slideIndex].enterReversed()
       }, SLIDES_INTERVAL * 1000)
     })
+
     nextButton.addEventListener('click', () => {
       this.slides[this.slideIndex].exit()
       this.slideIndex = (this.slideIndex + 1) % this.slides.length

@@ -12,7 +12,7 @@ import {
   visibleWidthAtZDepth,
   mouseToCoordinates,
 } from '../lib/three-utils'
-import { noise, poisson, mapRangeTriple } from '../lib/utils'
+import { noise, poisson, mapRangeTriple, timed } from '../lib/utils'
 import { ANIMATION_DURATION } from './Slides'
 
 // how much there is between the first and the last to arrive
@@ -25,14 +25,15 @@ const TEXTURE_SCALE = 0.7
 const DISPLACEMENT_RADIUS = 0.5
 
 export class Slide extends THREE.Group {
+  instancedMesh
+  // used for passing the transform to an instanced mesh
+  dummy = new THREE.Object3D()
+
   delays = []
   // the displaced curves
   curves = []
   // the pristine curves
   targetCurves = []
-  // TODO REFACTOR AAAAA
-  dummy = new THREE.Object3D()
-  mesh
 
   constructor({ texture, webgl, ...options }) {
     super(options)
@@ -51,12 +52,12 @@ export class Slide extends THREE.Group {
     }
 
     // get the points xy coordinates based on poisson-disc sampling
-    if (window.DEBUG) console.time('⏱Poisson-disc sampling')
-    const pointsXY = poisson([width, height])
-    if (window.DEBUG) console.timeEnd('⏱Poisson-disc sampling')
-    if (window.DEBUG) console.log(`Generated ${pointsXY.length} points`)
+    const poissonSampling = window.DEBUG ? timed(poisson, 'Poisson-disc sampling') : poisson
+    const points = poissonSampling([width, height])
 
-    // create the boxes!
+    this.NUM_INSTANCES = points.length
+
+    // create the geometry and material
     const geometry = new THREE.BoxBufferGeometry(0.1, 0.2, 0.1)
     const material = new ProjectedMaterial({
       camera: webgl.camera,
@@ -66,14 +67,16 @@ export class Slide extends THREE.Group {
       instanced: true,
     })
 
-    allocateProjectionData(geometry, pointsXY.length)
+    // allocate the projection data since we're using instancing
+    allocateProjectionData(geometry, this.NUM_INSTANCES)
 
-    this.mesh = new THREE.InstancedMesh(geometry, material, pointsXY.length)
-    this.mesh.castShadow = true
-    this.mesh.receiveShadow = true
-    this.add(this.mesh)
+    // create the instanced mesh
+    this.instancedMesh = new THREE.InstancedMesh(geometry, material, this.NUM_INSTANCES)
+    this.instancedMesh.castShadow = true
+    this.instancedMesh.receiveShadow = true
+    this.add(this.instancedMesh)
 
-    pointsXY.forEach((point, i) => {
+    points.forEach((point, i) => {
       // the arriving point
       const [x, y] = [point[0] - width / 2, point[1] - height / 2]
       const noiseZoom = 0.5
@@ -105,16 +108,16 @@ export class Slide extends THREE.Group {
       // put it at its center position
       alignOnCurve(this.dummy, curve, 0.5)
       this.dummy.updateMatrix()
-      this.mesh.setMatrixAt(i, this.dummy.matrix)
+      this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
 
       // project the texture!
       this.dummy.updateMatrixWorld()
-      projectInstanceAt(i, this.mesh, this.dummy.matrixWorld)
+      projectInstanceAt(i, this.instancedMesh, this.dummy.matrixWorld)
 
       // put it at the start again
       alignOnCurve(this.dummy, curve, 0)
       this.dummy.updateMatrix()
-      this.mesh.setMatrixAt(i, this.dummy.matrix)
+      this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
     })
 
     // TODO handle this better
@@ -213,13 +216,13 @@ export class Slide extends THREE.Group {
   enter() {
     this.tStart = this.webgl.time
     this.isEntering = true
-    this.isReversef = false
+    this.isReversed = false
   }
 
   exit() {
     this.tStart = this.webgl.time
     this.isEntering = false
-    this.isReversef = false
+    this.isReversed = false
   }
 
   enterReversed() {
@@ -235,7 +238,7 @@ export class Slide extends THREE.Group {
   }
 
   update(dt, time) {
-    for (let i = 0; i < this.mesh.count; i++) {
+    for (let i = 0; i < this.NUM_INSTANCES; i++) {
       const curve = this.curves[i]
       const targetCurve = this.targetCurves[i]
       const delay = this.delays[i]
@@ -298,8 +301,8 @@ export class Slide extends THREE.Group {
 
       alignOnCurve(this.dummy, curve, percentage)
       this.dummy.updateMatrix()
-      this.mesh.setMatrixAt(i, this.dummy.matrix)
-      this.mesh.instanceMatrix.needsUpdate = true
+      this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
+      this.instancedMesh.instanceMatrix.needsUpdate = true
     }
   }
 }

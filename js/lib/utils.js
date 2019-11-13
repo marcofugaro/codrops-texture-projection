@@ -2,6 +2,7 @@ import SimplexNoise from 'simplex-noise'
 import Poisson from 'poisson-disk-sampling'
 import { mapRange } from 'canvas-sketch-util/math'
 
+// wrapper with processing-like api of the library simplex-noise
 const simplex = new SimplexNoise()
 export function noise(...args) {
   switch (args.length) {
@@ -31,6 +32,8 @@ export function poisson(range) {
     .map(p => p.map(scaleInvert))
 }
 
+// like mapRange, but accepts also a middle value
+// this is done by default with d3.scaleLinear
 export function mapRangeTriple(
   value,
   inputMin,
@@ -45,5 +48,15 @@ export function mapRangeTriple(
     return mapRange(value, inputMin, inputMiddle, outputMin, outputMiddle, clamp)
   } else {
     return mapRange(value, inputMiddle, inputMax, outputMiddle, outputMax, clamp)
+  }
+}
+
+// print the time of execution of a function in the console
+export function timed(fn, label) {
+  return (...args) => {
+    console.time(`⏱${label}`)
+    const ret = fn(...args)
+    console.timeEnd(`⏱${label}`)
+    return ret
   }
 }

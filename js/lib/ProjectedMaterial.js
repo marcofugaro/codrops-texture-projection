@@ -5,6 +5,7 @@ import { monkeyPatch } from './three-utils'
 
 export class ProjectedMaterial extends THREE.ShaderMaterial {
   isProjectedMaterial = true
+  instanced = false
 
   // TODO implement cover: true
   constructor({ camera, texture, color = 0xffffff, textureScale = 1, instanced = false } = {}) {
@@ -20,25 +21,37 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
 
     const projPosition = camera.position.clone()
 
+    // scale to keep the image proportions and apply textureScale
     const ratio = texture.image.naturalWidth / texture.image.naturalHeight
-
     const ratioCamera = camera.aspect
+    const widthCamera = 1
+    const heightCamera = widthCamera * (1 / ratioCamera)
+    let widthScaled
+    let heightScaled
+    if (ratio < 1) {
+      const width = heightCamera * ratio
+      widthScaled = 1 / ((width / widthCamera) * textureScale)
+      heightScaled = 1 / textureScale
+    } else {
+      const height = widthCamera * (1 / ratio)
+      heightScaled = 1 / ((height / heightCamera) * 0.5)
+      widthScaled = 1 / textureScale
+    }
 
     super({
       lights: true,
       uniforms: {
         ...THREE.ShaderLib['lambert'].uniforms,
         baseColor: { value: new THREE.Color(color) },
+        texture: { value: texture },
         viewMatrixCamera: { type: 'm4', value: viewMatrixCamera },
         projectionMatrixCamera: { type: 'm4', value: projectionMatrixCamera },
         modelMatrixCamera: { type: 'mat4', value: modelMatrixCamera },
         // we will set this later when we will have positioned the object
         savedModelMatrix: { type: 'mat4', value: new THREE.Matrix4() },
-        texture: { value: texture },
         projPosition: { type: 'v3', value: projPosition },
-        ratio: { value: ratio },
-        ratioCamera: { value: ratioCamera },
-        textureScale: { value: textureScale },
+        widthScaled: { value: widthScaled },
+        heightScaled: { value: heightScaled },
       },
 
       vertexShader: monkeyPatch(lambertVert, {
@@ -87,9 +100,8 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
           uniform vec3 baseColor;
           uniform sampler2D texture;
           uniform vec3 projPosition;
-          uniform float ratio;
-          uniform float ratioCamera;
-          uniform float textureScale;
+          uniform float widthScaled;
+          uniform float heightScaled;
 
           varying vec3 vNormal;
           varying vec4 vWorldPosition;
@@ -102,24 +114,9 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
         'vec4 diffuseColor = vec4( diffuse, opacity );': `
           vec2 uv = (vTexCoords.xy / vTexCoords.w) * 0.5 + 0.5;
 
-
-          // TODO don't pass those as uniforms to avoid branching, or maybe do these calculations in js
-          // keep the image proportions and apply textureScale
-          float widthCamera = 1.0;
-          float heightCamera = widthCamera * (1.0 / ratioCamera);
-          if (ratio < 1.0) {
-            float width = heightCamera * ratio;
-            float widthPercent = 1.0 / (width / widthCamera * textureScale);
-            uv.x = map(uv.x, 0.0, 1.0, 0.5 - widthPercent / 2.0, 0.5 + widthPercent / 2.0);
-            float heightPercent = 1.0 / textureScale;
-            uv.y = map(uv.y, 0.0, 1.0, 0.5 - heightPercent / 2.0, 0.5 + heightPercent / 2.0);
-          } else {
-            float height = widthCamera * (1.0 / ratio);
-            float heightPercent = 1.0 / ((height / heightCamera) * 0.5);
-            uv.y = map(uv.y, 0.0, 1.0, 0.5 - heightPercent / 2.0, 0.5 + heightPercent / 2.0);
-            float widthPercent = 1.0 / textureScale;
-            uv.x = map(uv.x, 0.0, 1.0, 0.5 - widthPercent / 2.0, 0.5 + widthPercent / 2.0);
-          }
+          // apply the corrected width and height
+          uv.x = map(uv.x, 0.0, 1.0, 0.5 - widthScaled / 2.0, 0.5 + widthScaled / 2.0);
+          uv.y = map(uv.y, 0.0, 1.0, 0.5 - heightScaled / 2.0, 0.5 + heightScaled / 2.0);
 
           vec4 color = texture2D(texture, uv);
 
@@ -152,6 +149,8 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
       this.uniforms.projectionMatrixCamera.value.copy(camera.projectionMatrix)
       this.uniforms.ratioCamera.value = camera.aspect
     })
+
+    this.instanced = instanced
   }
 }
 
@@ -183,7 +182,14 @@ export function projectInstanceAt(index, instancedMesh, matrixWorld) {
     !instancedMesh.geometry.attributes.savedModelMatrix2 ||
     !instancedMesh.geometry.attributes.savedModelMatrix3
   ) {
-    throw new Error(``)
+    throw new Error(
+      `No allocated data found on the geometry, please call 'allocateProjectionData(geometry)'`
+    )
+  }
+
+  if (!instancedMesh.material.instanced) {
+    console.log(instancedMesh.material)
+    throw new Error(`Please pass 'instanced: true' to the ProjectedMaterial`)
   }
 
   instancedMesh.geometry.attributes.savedModelMatrix0.setXYZW(
