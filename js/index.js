@@ -45,7 +45,7 @@ assets.load({ renderer: webgl.renderer }).then(() => {
   // add any "WebGL components" here...
   // append them to the scene so you can
   // use them from other components easily
-  webgl.scene.slides = new Slides({ webgl })
+  webgl.scene.slides = new Slides(webgl)
   webgl.scene.add(webgl.scene.slides)
 
   // TODO remove this

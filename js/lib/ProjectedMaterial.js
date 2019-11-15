@@ -223,19 +223,19 @@ export function projectInstanceAt(index, instancedMesh, matrixWorld) {
 }
 
 export function allocateProjectionData(geometry, instancesCount) {
-  geometry.addAttribute(
+  geometry.setAttribute(
     'savedModelMatrix0',
     new THREE.InstancedBufferAttribute(new Float32Array(instancesCount * 4), 4)
   )
-  geometry.addAttribute(
+  geometry.setAttribute(
     'savedModelMatrix1',
     new THREE.InstancedBufferAttribute(new Float32Array(instancesCount * 4), 4)
   )
-  geometry.addAttribute(
+  geometry.setAttribute(
     'savedModelMatrix2',
     new THREE.InstancedBufferAttribute(new Float32Array(instancesCount * 4), 4)
   )
-  geometry.addAttribute(
+  geometry.setAttribute(
     'savedModelMatrix3',
     new THREE.InstancedBufferAttribute(new Float32Array(instancesCount * 4), 4)
   )

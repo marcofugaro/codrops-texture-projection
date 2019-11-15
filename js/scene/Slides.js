@@ -8,14 +8,16 @@ export const ANIMATION_DURATION = 1.5 // seconds
 // how much to wait until the animation of the next slides starts
 export const SLIDES_INTERVAL = 1.5 // seconds
 
-// preload the textures
-// TODO preload only the first one
+const IMAGES = [
+  'images/adult-beautiful-bikini-blue-pexels.jpg',
+  'images/christopher-campbell-unsplash.jpg',
+  'images/christopher-campbell2-unsplash.jpg',
+  'images/tyler-nix-unsplash.jpg',
+]
+
+// preload the first texture
 const image1 = assets.queue({
-  url: 'images/justin-essah-unsplash.jpg',
-  type: 'texture',
-})
-const image2 = assets.queue({
-  url: 'images/j-e-s-u-s-r-o-c-h-a-unsplash.jpg',
+  url: IMAGES.shift(),
   type: 'texture',
 })
 
@@ -23,18 +25,22 @@ export class Slides extends THREE.Group {
   slides = []
   slideIndex = 0
 
-  constructor({ webgl, ...options }) {
+  constructor(webgl, options) {
     super(options)
     this.webgl = webgl
 
-    const images = [image1, image2]
+    // initialize the first slide components
+    this.initSlide(image1)
 
-    // initialize the slide components
-    images.forEach(image => {
-      const texture = assets.get(image)
-      const slide = new Slide({ texture, webgl })
-      this.add(slide)
-      this.slides.push(slide)
+    // and initialize the other once they're loaded
+    IMAGES.forEach(image => {
+      assets
+        .loadSingle({
+          url: image,
+          type: 'texture',
+          renderer: webgl.renderer,
+        })
+        .then(this.initSlide)
     })
 
     // make the first one enter
@@ -62,5 +68,12 @@ export class Slides extends THREE.Group {
         this.slides[this.slideIndex].enter()
       }, SLIDES_INTERVAL * 1000)
     })
+  }
+
+  initSlide = image => {
+    const texture = assets.get(image)
+    const slide = new Slide(this.webgl, { texture })
+    this.add(slide)
+    this.slides.push(slide)
   }
 }

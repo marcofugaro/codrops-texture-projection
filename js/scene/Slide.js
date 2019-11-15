@@ -35,7 +35,7 @@ export class Slide extends THREE.Group {
   // the pristine curves
   targetCurves = []
 
-  constructor({ texture, webgl, ...options }) {
+  constructor(webgl, { texture, ...options }) {
     super(options)
     this.webgl = webgl
 
