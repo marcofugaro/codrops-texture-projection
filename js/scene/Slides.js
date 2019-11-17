@@ -33,19 +33,19 @@ export class Slides extends THREE.Group {
     this.initSlide(image1)
 
     // and initialize the other once they're loaded
-    IMAGES.forEach(image => {
-      assets
-        .loadSingle({
-          url: image,
-          type: 'texture',
-          renderer: webgl.renderer,
-        })
-        .then(this.initSlide)
-    })
+    // IMAGES.forEach(image => {
+    //   assets
+    //     .loadSingle({
+    //       url: image,
+    //       type: 'texture',
+    //       renderer: webgl.renderer,
+    //     })
+    //     .then(this.initSlide)
+    // })
 
     // make the first one enter
     setTimeout(() => {
-      this.slides[this.slideIndex].enter()
+      // this.slides[this.slideIndex].enter()
     }, 0)
 
     // change slides on the prev/next button click

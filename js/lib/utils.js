@@ -19,15 +19,14 @@ export function noise(...args) {
   }
 }
 
-export function poisson(range) {
+export function poisson(range, minRadius, maxRarius) {
   // the poisson-disk-sampling library doesn't work well
   // with small numbers
-  const scale = n => n * 1000
-  const scaleInvert = n => n / 1000
+  const scale = n => n * 100
+  const scaleInvert = n => n / 100
 
   const rangeScaled = range.map(scale)
-  const minUnit = Math.min(...rangeScaled)
-  return new Poisson(rangeScaled, minUnit * 0.04, minUnit * 0.05, 10)
+  return new Poisson(rangeScaled, minRadius, maxRarius, 10)
     .fill()
     .map(p => p.map(scaleInvert))
 }

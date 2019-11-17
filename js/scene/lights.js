@@ -5,7 +5,7 @@ export function addLights(webgl) {
   webgl.renderer.shadowMap.enabled = true
   webgl.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2)
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1)
   directionalLight.castShadow = true
   directionalLight.position.set(0, 10, 5)
 
@@ -16,7 +16,7 @@ export function addLights(webgl) {
 
   // the size of the ortographic camera frustum
   // bigger means more diffuse shadows
-  const size = 20
+  const size = 5
   directionalLight.shadow.camera.left = -size / 2
   directionalLight.shadow.camera.right = size / 2
   directionalLight.shadow.camera.top = size / 2
@@ -28,6 +28,6 @@ export function addLights(webgl) {
 
   webgl.scene.add(directionalLight)
 
-  const ambientLight = new THREE.AmbientLight(0xcccccc, 1.2)
+  const ambientLight = new THREE.AmbientLight(0xcccccc, 1)
   webgl.scene.add(ambientLight)
 }

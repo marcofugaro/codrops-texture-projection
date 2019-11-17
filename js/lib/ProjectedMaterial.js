@@ -21,22 +21,7 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
 
     const projPosition = camera.position.clone()
 
-    // scale to keep the image proportions and apply textureScale
-    const ratio = texture.image.naturalWidth / texture.image.naturalHeight
-    const ratioCamera = camera.aspect
-    const widthCamera = 1
-    const heightCamera = widthCamera * (1 / ratioCamera)
-    let widthScaled
-    let heightScaled
-    if (ratio < 1) {
-      const width = heightCamera * ratio
-      widthScaled = 1 / ((width / widthCamera) * textureScale)
-      heightScaled = 1 / textureScale
-    } else {
-      const height = widthCamera * (1 / ratio)
-      heightScaled = 1 / ((height / heightCamera) * 0.5)
-      widthScaled = 1 / textureScale
-    }
+    const [widthScaled, heightScaled] = computeScaledDimensions(texture, camera, textureScale)
 
     super({
       lights: true,
@@ -147,11 +132,35 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
     // listen for the resize of the renderer
     window.addEventListener('resize', () => {
       this.uniforms.projectionMatrixCamera.value.copy(camera.projectionMatrix)
-      this.uniforms.ratioCamera.value = camera.aspect
+
+      const [widthScaledNew, heightScaledNew] = computeScaledDimensions(texture, camera, textureScale)
+      this.uniforms.widthScaled.value = widthScaledNew
+      this.uniforms.heightScaled.value = heightScaledNew
     })
 
     this.instanced = instanced
   }
+}
+
+// scale to keep the image proportions and apply textureScale
+function computeScaledDimensions(texture, camera, textureScale) {
+  const ratio = texture.image.naturalWidth / texture.image.naturalHeight
+  const ratioCamera = camera.aspect
+  const widthCamera = 1
+  const heightCamera = widthCamera * (1 / ratioCamera)
+  let widthScaled
+  let heightScaled
+  if (ratio < 1) {
+    const width = heightCamera * ratio
+    widthScaled = 1 / ((width / widthCamera) * textureScale)
+    heightScaled = 1 / textureScale
+  } else {
+    const height = widthCamera * (1 / ratio)
+    heightScaled = 1 / ((height / heightCamera) * 0.5)
+    widthScaled = 1 / textureScale
+  }
+
+  return [widthScaled, heightScaled]
 }
 
 export function project(mesh) {

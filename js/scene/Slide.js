@@ -50,10 +50,28 @@ export class Slide extends THREE.Group {
       width = visibleWidthAtZDepth(0, webgl.camera) * TEXTURE_SCALE
       height = width * (1 / ratio)
     }
+    // make it a little bigger
+    width = width * 1.5
+    height = height * 1.1
 
     // get the points xy coordinates based on poisson-disc sampling
     const poissonSampling = window.DEBUG ? timed(poisson, 'Poisson-disc sampling') : poisson
-    const points = poissonSampling([width, height])
+    let points = poissonSampling([width, height], 7.73, 9.66)
+
+    points = points.filter(([x, y]) => {
+      if (x < (Math.sin(y * 3) * Math.sin(y * 2) * Math.sin(y * 4.7) * 0.5 + 0.5) * 0.7) {
+        return false
+      }
+
+      if (x > (Math.sin(y * 3) * Math.sin(y * 2) * Math.sin(y * 4.7) * 0.5 - 0.5) * 0.7 + width) {
+        return false
+      }
+
+      return true
+    })
+
+    // center them
+    points = points.map(point => [point[0] - width / 2, point[1] - height / 2])
 
     this.NUM_INSTANCES = points.length
 
@@ -63,7 +81,7 @@ export class Slide extends THREE.Group {
       camera: webgl.camera,
       texture,
       textureScale: TEXTURE_SCALE,
-      color: 0x222222,
+      color: new THREE.Color(webgl.controls.materialColor),
       instanced: true,
     })
 
@@ -78,12 +96,10 @@ export class Slide extends THREE.Group {
 
     points.forEach((point, i) => {
       // the arriving point
-      const [x, y] = [point[0] - width / 2, point[1] - height / 2]
-      const noiseZoom = 0.5
-      const z = noise(x * noiseZoom, y * noiseZoom) * 0.2
+      const [x, y] = point
 
       // create the curves!
-      const curvePoints = this.generateCurve(x, y, z)
+      const curvePoints = this.generateCurve(x, y, 0)
       const curve = new THREE.CatmullRomCurve3(curvePoints)
       this.curves.push(curve)
       this.targetCurves.push(curve.clone())
@@ -102,7 +118,7 @@ export class Slide extends THREE.Group {
       }
 
       // give delay to each box
-      const delay = this.generateDelay(x, y, z)
+      const delay = this.generateDelay(x, y)
       this.delays.push(delay)
 
       // put it at its center position
@@ -190,7 +206,7 @@ export class Slide extends THREE.Group {
   }
 
   // TODO maybe play with speed rather than delay
-  generateDelay(x, y, z) {
+  generateDelay(x, y) {
     // const distancePoint = new THREE.Vector3(
     //   width * 0 - width / 2,
     //   height * 0.5 - height / 2,
@@ -243,6 +259,17 @@ export class Slide extends THREE.Group {
       const targetCurve = this.targetCurves[i]
       const delay = this.delays[i]
 
+      // the waving effect
+      curve.points.forEach((point, j) => {
+        const { x, y } = point
+
+        const noiseZoom = 0.5
+        const speed = 0.2
+        const amplitude = 0.2
+        const z = noise(x * noiseZoom - time * speed, y * noiseZoom) * amplitude
+        point.z = z
+      })
+
       // if the user has interacted
       if (this.mousePoint) {
         // displace the curve where the user has interacted
@@ -276,7 +303,7 @@ export class Slide extends THREE.Group {
       }
 
       // align the box on the curve
-      let percentage = 0
+      let percentage = 0.5
       if (this.tStart) {
         if (this.isEntering) {
           percentage = mapRange(
