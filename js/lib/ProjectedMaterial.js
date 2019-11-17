@@ -21,6 +21,7 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
 
     const projPosition = camera.position.clone()
 
+    // scale to keep the image proportions and apply textureScale
     const [widthScaled, heightScaled] = computeScaledDimensions(texture, camera, textureScale)
 
     super({

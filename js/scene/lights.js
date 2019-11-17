@@ -5,7 +5,7 @@ export function addLights(webgl) {
   webgl.renderer.shadowMap.enabled = true
   webgl.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1)
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9)
   directionalLight.castShadow = true
   directionalLight.position.set(0, 10, 5)
 
@@ -28,6 +28,6 @@ export function addLights(webgl) {
 
   webgl.scene.add(directionalLight)
 
-  const ambientLight = new THREE.AmbientLight(0xcccccc, 1)
+  const ambientLight = new THREE.AmbientLight(0xcccccc, 0.9)
   webgl.scene.add(ambientLight)
 }

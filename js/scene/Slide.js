@@ -259,23 +259,13 @@ export class Slide extends THREE.Group {
       const targetCurve = this.targetCurves[i]
       const delay = this.delays[i]
 
-      // the waving effect
+      // if the user has interacted
+      // displace the curve where the user has interacted
       curve.points.forEach((point, j) => {
         const { x, y } = point
+        const targetPoint = targetCurve.points[j]
 
-        const noiseZoom = 0.5
-        const speed = 0.2
-        const amplitude = 0.2
-        const z = noise(x * noiseZoom - time * speed, y * noiseZoom) * amplitude
-        point.z = z
-      })
-
-      // if the user has interacted
-      if (this.mousePoint) {
-        // displace the curve where the user has interacted
-        curve.points.forEach((point, j) => {
-          const targetPoint = targetCurve.points[j]
-
+        if (this.mousePoint) {
           // displace the curve points
           if (point.distanceTo(this.mousePoint) < DISPLACEMENT_RADIUS) {
             const direction = point.clone().sub(this.mousePoint)
@@ -290,16 +280,23 @@ export class Slide extends THREE.Group {
           if (point.distanceTo(targetPoint) > 0.01) {
             point.lerp(targetPoint, dt * 3)
           }
-        })
-
-        // update the debug mode lines
-        if (window.DEBUG && curve.mesh) {
-          curve.points.forEach((point, j) => {
-            const vertex = curve.mesh.geometry.vertices[j]
-            vertex.copy(point)
-          })
-          curve.mesh.geometry.verticesNeedUpdate = true
         }
+
+        // the waving effect
+        const noiseZoom = 0.5
+        const speed = 0.2
+        const amplitude = 0.4
+        const z = noise(x * noiseZoom - time * speed, y * noiseZoom) * amplitude
+        point.z = z
+      })
+
+      // update the debug mode lines
+      if (window.DEBUG && curve.mesh) {
+        curve.points.forEach((point, j) => {
+          const vertex = curve.mesh.geometry.vertices[j]
+          vertex.copy(point)
+        })
+        curve.mesh.geometry.verticesNeedUpdate = true
       }
 
       // align the box on the curve
