@@ -10,7 +10,6 @@ export const SLIDES_INTERVAL = 1.5 // seconds
 
 const IMAGES = [
   'images/adult-beautiful-bikini-blue-pexels.jpg',
-  'images/christopher-campbell-unsplash.jpg',
   'images/christopher-campbell2-unsplash.jpg',
   'images/tyler-nix-unsplash.jpg',
 ]
@@ -33,20 +32,20 @@ export class Slides extends THREE.Group {
     this.initSlide(image1)
 
     // and initialize the other once they're loaded
-    // IMAGES.forEach(image => {
-    //   assets
-    //     .loadSingle({
-    //       url: image,
-    //       type: 'texture',
-    //       renderer: webgl.renderer,
-    //     })
-    //     .then(this.initSlide)
-    // })
+    IMAGES.forEach(image => {
+      assets
+        .loadSingle({
+          url: image,
+          type: 'texture',
+          renderer: webgl.renderer,
+        })
+        .then(this.initSlide)
+    })
 
     // make the first one enter
     setTimeout(() => {
-      // this.slides[this.slideIndex].enter()
-    }, 0)
+      this.slides[this.slideIndex].enter()
+    }, 16)
 
     // change slides on the prev/next button click
     // TODO disable the button when the animation is playing or something

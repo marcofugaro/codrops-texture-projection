@@ -91,7 +91,6 @@ export class Slide extends THREE.Group {
     // create the instanced mesh
     this.instancedMesh = new THREE.InstancedMesh(geometry, material, this.NUM_INSTANCES)
     this.instancedMesh.castShadow = true
-    this.instancedMesh.receiveShadow = true
     this.add(this.instancedMesh)
 
     points.forEach((point, i) => {
@@ -108,7 +107,7 @@ export class Slide extends THREE.Group {
       if (window.DEBUG && i % 10 === 0) {
         const curveGeometry = new THREE.Geometry().setFromPoints(curve.points)
         const curveMaterial = new THREE.LineBasicMaterial({
-          color: 0xffffff,
+          color: 0x000000,
           transparent: true,
           opacity: 0.2,
         })
@@ -182,8 +181,8 @@ export class Slide extends THREE.Group {
     const startX = outOfViewX
     const endX = outOfViewX * -1
 
-    const startZ = -0.5
-    const endZ = startZ * -1
+    const startZ = -1
+    const endZ = startZ
 
     for (let i = 0; i < segments; i++) {
       const offsetX = mapRange(i, 0, segments - 1, startX, endX)
@@ -198,7 +197,7 @@ export class Slide extends THREE.Group {
       // TODO try to do a spiral
       // const noiseZ = noise(1000 + i * noiseZoom) * 0.3
 
-      const offsetZ = mapRange(i, 0, segments - 1, startZ, endZ)
+      const offsetZ = mapRangeTriple(i, 0, halfIndex, segments - 1, startZ, 0, endZ)
 
       points.push(new THREE.Vector3(x + offsetX, y * scaleY + noiseY, z + offsetZ))
     }
@@ -219,10 +218,8 @@ export class Slide extends THREE.Group {
     // const delay = distance * 2
 
     const noiseZoom2 = 0.5
-    // 1000 is to differentiate it from the noise used for the z coordinate
     // TODO handle this better
-    const delay =
-      (noise(1000 + x * noiseZoom2, 1000 + y * noiseZoom2) * 0.5 + 0.5) * DELAY_MULTIPLICATOR
+    const delay = (noise(x * noiseZoom2, y * noiseZoom2) * 0.5 + 0.5) * DELAY_MULTIPLICATOR
 
     // const delay = Math.random() * 3
 
@@ -278,16 +275,16 @@ export class Slide extends THREE.Group {
 
           // and move them back to their original position
           if (point.distanceTo(targetPoint) > 0.01) {
-            point.lerp(targetPoint, dt * 3)
+            point.lerp(targetPoint, dt * 8)
           }
         }
 
         // the waving effect
         const noiseZoom = 0.5
         const speed = 0.2
-        const amplitude = 0.4
+        const amplitude = 0.2
         const z = noise(x * noiseZoom - time * speed, y * noiseZoom) * amplitude
-        point.z = z
+        point.z = targetPoint.z + z
       })
 
       // update the debug mode lines
@@ -300,12 +297,13 @@ export class Slide extends THREE.Group {
       }
 
       // align the box on the curve
-      let percentage = 0.5
+      let percentage = 0
       if (this.tStart) {
         if (this.isEntering) {
           percentage = mapRange(
             time - this.tStart,
-            0 + delay,
+            // ✨ magic number
+            0 + delay * 0.5,
             ANIMATION_DURATION + delay,
             this.isReversed ? 0.5 : 0,
             this.isReversed ? 0 : 0.5,

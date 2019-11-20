@@ -14,14 +14,13 @@ const canvas = document.querySelector('#app')
 const webgl = new WebGLApp({
   canvas,
   // set the scene background color
-  // background: '#111111',
-  background: '#BEBEBE',
+  // TODO put this in a constant or somehitng
+  background: '#6bcfef',
   // show the fps counter from stats.js
   showFps: window.DEBUG,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
-    // background: '#111111',
-    background: '#BEBEBE',
+    // TODO put this in a constant or somehitng
     materialColor: '#3698D5',
   },
   hideControls: !window.DEBUG,
@@ -52,18 +51,6 @@ assets.load({ renderer: webgl.renderer }).then(() => {
   webgl.scene.add(webgl.scene.slides)
   webgl.scene.walls = new Walls(webgl)
   webgl.scene.add(webgl.scene.walls)
-
-  // TODO remove this
-  webgl.controls.$onChanges(() => {
-    webgl.renderer.setClearColor(webgl.controls.background, 1)
-    webgl.scene.walls.traverse(child => {
-      if (child.isMesh) {
-        child.material.color = new THREE.Color(webgl.controls.background)
-      }
-    })
-
-    webgl.scene.slides.slides[0].instancedMesh.material.uniforms.baseColor.value = new THREE.Color(webgl.controls.materialColor)
-  })
 
   // start animation loop
   webgl.start()
