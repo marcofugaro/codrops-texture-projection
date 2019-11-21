@@ -304,7 +304,8 @@ export class Slide extends THREE.Group {
         this.percentages[i] = lerp(
           this.previousPercentages[i],
           this.targetPercentage,
-          // nice complicated equation! this equation defines the "feel" of the animation timing
+          // nice complicated equation! this equation defines the "feel" of the animation.
+          // a simplified version would be `(time - this.tStart) / ANIMATION_DURATION`
           clamp01(
             (time - (this.tStart + delay * delayDelay)) /
               (ANIMATION_DURATION + delay * (1 - delayDelay))

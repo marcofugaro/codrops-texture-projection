@@ -45,8 +45,8 @@ export class Slides extends THREE.Group {
     }, 16)
 
     // change slides on the prev/next button click
-    const prevButton = document.querySelector('.content__prev')
-    const nextButton = document.querySelector('.content__next')
+    const prevButton = document.querySelector('.frame__prev')
+    const nextButton = document.querySelector('.frame__next')
 
     prevButton.addEventListener('click', () => {
       this.slides[this.slideIndex].animateTo(0)
