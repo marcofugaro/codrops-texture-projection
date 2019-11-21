@@ -2,9 +2,6 @@ import * as THREE from 'three'
 import assets from '../lib/AssetManager'
 import { Slide } from './Slide'
 
-// how much the animation of a single box lasts
-export const ANIMATION_DURATION = 1.5 // seconds
-
 // how much to wait until the animation of the next slides starts
 export const SLIDES_INTERVAL = 1.5 // seconds
 

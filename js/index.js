@@ -1,3 +1,4 @@
+import State from 'controls-state'
 import WebGLApp from './lib/WebGLApp'
 import assets from './lib/AssetManager'
 import { addLights } from './scene/lights'
@@ -16,15 +17,21 @@ const webgl = new WebGLApp({
   // TODO put this in a constant or somehitng
   background: '#6bcfef',
   // show the fps counter from stats.js
-  showFps: true, // window.DEBUG,
+  showFps: window.DEBUG,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
     // TODO put this in a constant or somehitng
-    materialColor: '#3698D5',
-    // noiseFrequency
-    // noiseZoom
-    // noiseAmplitude
-    // displacementRadius
+    color: '#3698D5',
+    // the interaction displacement
+    displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
+    // how much there is between the first and the last to arrive
+    delayFactor: new State.Slider(2.2, { min: 0, max: 10, step: 0.01 }),
+    // the waving effect
+    turbulence: {
+      speed: new State.Slider(0.2, { min: 0, max: 3, step: 0.01 }),
+      frequency: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
+      amplitude: new State.Slider(0.2, { min: 0, max: 2, step: 0.01 }),
+    },
   },
 })
 

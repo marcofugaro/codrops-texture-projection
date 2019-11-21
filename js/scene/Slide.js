@@ -13,16 +13,12 @@ import {
   mouseToCoordinates,
 } from '../lib/three-utils'
 import { noise, poisson, mapRangeTriple, timed } from '../lib/utils'
-import { ANIMATION_DURATION } from './Slides'
 
-// how much there is between the first and the last to arrive
-const DELAY_MULTIPLICATOR = 2.2
+// how much the animation of a single box lasts
+export const ANIMATION_DURATION = 1.5 // seconds
 
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
-
-// how much to start displacing on mousemove
-const DISPLACEMENT_RADIUS = 0.5
 
 export class Slide extends THREE.Group {
   instancedMesh
@@ -86,8 +82,13 @@ export class Slide extends THREE.Group {
       camera: webgl.camera,
       texture,
       textureScale: TEXTURE_SCALE,
-      color: new THREE.Color(webgl.controls.materialColor),
+      color: new THREE.Color(webgl.controls.color),
       instanced: true,
+    })
+    webgl.controls.$onChanges(({ color }) => {
+      if (color) {
+        material.uniforms.baseColor.value = new THREE.Color(color.value)
+      }
     })
 
     // allocate the projection data since we're using instancing
@@ -142,13 +143,17 @@ export class Slide extends THREE.Group {
       this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
     })
 
+    this.delays = this.normalizeDelays(this.delays)
+    webgl.controls.$onChanges(({ delayFactor }) => {
+      if (delayFactor) {
+        const delays = points.map(p => this.generateDelay(...p))
+        this.delays = this.normalizeDelays(delays)
+      }
+    })
+
     // put the animation at 0
     this.percentages.length = this.NUM_INSTANCES
     this.percentages.fill(0)
-
-    // TODO handle this better
-    const minDelay = Math.min(...this.delays)
-    this.delays = this.delays.map(delay => delay - minDelay)
   }
 
   onPointerMove(event, [x, y]) {
@@ -163,8 +168,9 @@ export class Slide extends THREE.Group {
 
     if (window.DEBUG) {
       if (!this.mouseSphere) {
+        const { displacement } = this.webgl.controls
         this.mouseSphere = new THREE.Mesh(
-          new THREE.SphereBufferGeometry(DISPLACEMENT_RADIUS, 16, 16),
+          new THREE.SphereBufferGeometry(displacement, 16, 16),
           new THREE.MeshBasicMaterial({ color: 0xfffff00, transparent: true, opacity: 0.1 })
         )
         this.add(this.mouseSphere)
@@ -183,6 +189,7 @@ export class Slide extends THREE.Group {
     const startX = minX
     const endX = minX * -1
 
+    // TODO put this in a constant
     const startZ = -1
     const endZ = startZ
 
@@ -191,13 +198,13 @@ export class Slide extends THREE.Group {
       const halfIndex = segments / 2
 
       const noiseAmount = mapRangeTriple(i, 0, halfIndex, segments - 1, 1, 0, 1)
-      const noiseZoom = 0.3
+      const frequency = 0.3
       const noiseAmplitude = 0.6
-      const noiseY = noise(offsetX * noiseZoom) * noiseAmplitude * eases.quartOut(noiseAmount)
+      const noiseY = noise(offsetX * frequency) * noiseAmplitude * eases.quartOut(noiseAmount)
       const scaleY = mapRange(eases.quartIn(1 - noiseAmount), 0, 1, 0.2, 1)
 
       // TODO try to do a spiral
-      // const noiseZ = noise(1000 + i * noiseZoom) * 0.3
+      // const noiseZ = noise(1000 + i * frequency) * 0.3
 
       const offsetZ = mapRangeTriple(i, 0, halfIndex, segments - 1, startZ, 0, endZ)
 
@@ -206,7 +213,6 @@ export class Slide extends THREE.Group {
     return points
   }
 
-  // TODO maybe play with speed rather than delay
   generateDelay(x, y) {
     // const distancePoint = new THREE.Vector3(
     //   width * 0 - width / 2,
@@ -219,13 +225,18 @@ export class Slide extends THREE.Group {
     // const delay = Math.pow(distance, 2)
     // const delay = distance * 2
 
-    const noiseZoom2 = 0.5
-    // TODO handle this better
-    const delay = (noise(x * noiseZoom2, y * noiseZoom2) * 0.5 + 0.5) * DELAY_MULTIPLICATOR
+    const { delayFactor } = this.webgl.controls
+    const frequency = 0.5
+    const delay = (noise(x * frequency, y * frequency) * 0.5 + 0.5) * delayFactor
 
     // const delay = Math.random() * 3
-
     return delay
+  }
+
+  // makes so the shortest delay is 0
+  normalizeDelays = delays => {
+    const minDelay = Math.min(...delays)
+    return delays.map(delay => delay - minDelay)
   }
 
   animateTo = percentage => {
@@ -240,6 +251,8 @@ export class Slide extends THREE.Group {
   }
 
   update(dt, time) {
+    const { displacement } = this.webgl.controls
+
     for (let i = 0; i < this.NUM_INSTANCES; i++) {
       const curve = this.curves[i]
       const targetCurve = this.targetCurves[i]
@@ -253,26 +266,24 @@ export class Slide extends THREE.Group {
 
         if (this.mousePoint) {
           // displace the curve points
-          if (point.distanceTo(this.mousePoint) < DISPLACEMENT_RADIUS) {
+          if (point.distanceTo(this.mousePoint) < displacement) {
             const direction = point.clone().sub(this.mousePoint)
-            const displacementAmount = DISPLACEMENT_RADIUS - direction.length()
+            const displacementAmount = displacement - direction.length()
             direction.setLength(displacementAmount)
             direction.add(point)
 
-            point.lerp(direction, dt * 6)
+            point.lerp(direction, dt * 6) // ✨ magic number
           }
 
           // and move them back to their original position
           if (point.distanceTo(targetPoint) > 0.01) {
-            point.lerp(targetPoint, dt * 8)
+            point.lerp(targetPoint, dt * 8) // ✨ magic number
           }
         }
 
         // the waving effect
-        const noiseZoom = 0.5
-        const speed = 0.2
-        const amplitude = 0.2
-        const z = noise(x * noiseZoom - time * speed, y * noiseZoom) * amplitude
+        const { frequency, speed, amplitude } = this.webgl.controls.turbulence
+        const z = noise(x * frequency - time * speed, y * frequency) * amplitude
         point.z = targetPoint.z + z
       })
 
@@ -286,8 +297,7 @@ export class Slide extends THREE.Group {
       }
 
       if (this.tStart) {
-        // ✨ magic number
-        const delayDelay = 0.5
+        const delayDelay = 0.5 // ✨ magic number
 
         // where to put the box on the curve,
         // 0 is left of the screen, 0.5 center of the screen, 1 is right of the screen
