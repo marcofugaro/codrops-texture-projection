@@ -1,4 +1,3 @@
-import * as THREE from 'three'
 import WebGLApp from './lib/WebGLApp'
 import assets from './lib/AssetManager'
 import { addLights } from './scene/lights'
@@ -17,13 +16,16 @@ const webgl = new WebGLApp({
   // TODO put this in a constant or somehitng
   background: '#6bcfef',
   // show the fps counter from stats.js
-  showFps: window.DEBUG,
+  showFps: true, // window.DEBUG,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
     // TODO put this in a constant or somehitng
     materialColor: '#3698D5',
+    // noiseFrequency
+    // noiseZoom
+    // noiseAmplitude
+    // displacementRadius
   },
-  hideControls: !window.DEBUG,
 })
 
 // attach it to the window to inspect in the console

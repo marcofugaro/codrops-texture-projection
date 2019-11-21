@@ -44,27 +44,28 @@ export class Slides extends THREE.Group {
 
     // make the first one enter
     setTimeout(() => {
-      this.slides[this.slideIndex].enter()
+      this.slides[this.slideIndex].animateTo(0.5)
     }, 16)
 
     // change slides on the prev/next button click
-    // TODO disable the button when the animation is playing or something
     const prevButton = document.querySelector('.content__prev')
     const nextButton = document.querySelector('.content__next')
 
     prevButton.addEventListener('click', () => {
-      this.slides[this.slideIndex].exitReversed()
+      this.slides[this.slideIndex].animateTo(0)
       this.slideIndex = (this.slideIndex - 1 + this.slides.length) % this.slides.length
+      this.slides[this.slideIndex].moveTo(1)
       setTimeout(() => {
-        this.slides[this.slideIndex].enterReversed()
+        this.slides[this.slideIndex].animateTo(0.5)
       }, SLIDES_INTERVAL * 1000)
     })
 
     nextButton.addEventListener('click', () => {
-      this.slides[this.slideIndex].exit()
+      this.slides[this.slideIndex].animateTo(1)
       this.slideIndex = (this.slideIndex + 1) % this.slides.length
+      this.slides[this.slideIndex].moveTo(0)
       setTimeout(() => {
-        this.slides[this.slideIndex].enter()
+        this.slides[this.slideIndex].animateTo(0.5)
       }, SLIDES_INTERVAL * 1000)
     })
   }

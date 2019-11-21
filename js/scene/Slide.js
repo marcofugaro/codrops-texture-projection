@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { mapRange } from 'canvas-sketch-util/math'
+import { mapRange, lerp, clamp01 } from 'canvas-sketch-util/math'
 import * as eases from 'eases'
 import {
   ProjectedMaterial,
@@ -34,6 +34,11 @@ export class Slide extends THREE.Group {
   curves = []
   // the pristine curves
   targetCurves = []
+
+  // used for the animation lerping
+  previousPercentages = []
+  percentages = []
+  targetPercentage = 0
 
   constructor(webgl, { texture, ...options }) {
     super(options)
@@ -93,12 +98,14 @@ export class Slide extends THREE.Group {
     this.instancedMesh.castShadow = true
     this.add(this.instancedMesh)
 
+    const minX = -visibleWidthAtZDepth(-1, this.webgl.camera) / 2 - width * 0.6
+
     points.forEach((point, i) => {
       // the arriving point
       const [x, y] = point
 
       // create the curves!
-      const curvePoints = this.generateCurve(x, y, 0)
+      const curvePoints = this.generateCurve(x, y, 0, minX)
       const curve = new THREE.CatmullRomCurve3(curvePoints)
       this.curves.push(curve)
       this.targetCurves.push(curve.clone())
@@ -135,6 +142,10 @@ export class Slide extends THREE.Group {
       this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
     })
 
+    // put the animation at 0
+    this.percentages.length = this.NUM_INSTANCES
+    this.percentages.fill(0)
+
     // TODO handle this better
     const minDelay = Math.min(...this.delays)
     this.delays = this.delays.map(delay => delay - minDelay)
@@ -163,23 +174,14 @@ export class Slide extends THREE.Group {
     }
   }
 
-  generateCurve(x, y, z) {
+  generateCurve(x, y, z, minX) {
     const points = []
 
     // must be odds so we have the middle frame
     const segments = 51
 
-    const outOfViewX =
-      mouseToCoordinates({
-        x: 0,
-        y: this.webgl.width / 2,
-        camera: this.webgl.camera,
-        width: this.webgl.width,
-        height: this.webgl.height,
-      }).x * 1.4
-
-    const startX = outOfViewX
-    const endX = outOfViewX * -1
+    const startX = minX
+    const endX = minX * -1
 
     const startZ = -1
     const endZ = startZ
@@ -226,28 +228,15 @@ export class Slide extends THREE.Group {
     return delay
   }
 
-  enter() {
+  animateTo = percentage => {
     this.tStart = this.webgl.time
-    this.isEntering = true
-    this.isReversed = false
+    this.previousPercentages = this.percentages.slice()
+    this.targetPercentage = percentage
   }
 
-  exit() {
-    this.tStart = this.webgl.time
-    this.isEntering = false
-    this.isReversed = false
-  }
-
-  enterReversed() {
-    this.tStart = this.webgl.time
-    this.isEntering = true
-    this.isReversed = true
-  }
-
-  exitReversed() {
-    this.tStart = this.webgl.time
-    this.isEntering = false
-    this.isReversed = true
+  moveTo = percentage => {
+    this.percentages.fill(percentage)
+    this.targetPercentage = percentage
   }
 
   update(dt, time) {
@@ -296,32 +285,25 @@ export class Slide extends THREE.Group {
         curve.mesh.geometry.verticesNeedUpdate = true
       }
 
-      // align the box on the curve
-      let percentage = 0
       if (this.tStart) {
-        if (this.isEntering) {
-          percentage = mapRange(
-            time - this.tStart,
-            // ✨ magic number
-            0 + delay * 0.5,
-            ANIMATION_DURATION + delay,
-            this.isReversed ? 0.5 : 0,
-            this.isReversed ? 0 : 0.5,
-            true
+        // ✨ magic number
+        const delayDelay = 0.5
+
+        // where to put the box on the curve,
+        // 0 is left of the screen, 0.5 center of the screen, 1 is right of the screen
+        this.percentages[i] = lerp(
+          this.previousPercentages[i],
+          this.targetPercentage,
+          // nice complicated equation! this equation defines the "feel" of the animation timing
+          clamp01(
+            (time - (this.tStart + delay * delayDelay)) /
+              (ANIMATION_DURATION + delay * (1 - delayDelay))
           )
-        } else {
-          percentage = mapRange(
-            time - this.tStart,
-            0 + delay,
-            ANIMATION_DURATION + delay,
-            this.isReversed ? 1 : 0.5,
-            this.isReversed ? 0.5 : 1,
-            true
-          )
-        }
+        )
       }
 
-      alignOnCurve(this.dummy, curve, percentage)
+      // align the box on the curve
+      alignOnCurve(this.dummy, curve, this.percentages[i])
       this.dummy.updateMatrix()
       this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
       this.instancedMesh.instanceMatrix.needsUpdate = true

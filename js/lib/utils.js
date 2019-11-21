@@ -26,9 +26,7 @@ export function poisson(range, minRadius, maxRarius) {
   const scaleInvert = n => n / 100
 
   const rangeScaled = range.map(scale)
-  return new Poisson(rangeScaled, minRadius, maxRarius, 10)
-    .fill()
-    .map(p => p.map(scaleInvert))
+  return new Poisson(rangeScaled, minRadius, maxRarius, 10).fill().map(p => p.map(scaleInvert))
 }
 
 // like mapRange, but accepts also a middle value

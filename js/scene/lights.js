@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { visibleWidthAtZDepth } from '../lib/three-utils'
 
 export function addLights(webgl) {
   // enable shadows
@@ -11,17 +12,17 @@ export function addLights(webgl) {
 
   // higher values give better quality shadows
   // lower values give better performance
-  directionalLight.shadow.mapSize.width = 1024
-  directionalLight.shadow.mapSize.height = 1024
+  directionalLight.shadow.mapSize.width = 512
+  directionalLight.shadow.mapSize.height = 512
 
   // the size of the ortographic camera frustum
   // bigger means more diffuse shadows
-  // TODO make this responsive
-  const size = 10
-  directionalLight.shadow.camera.left = -size / 2
-  directionalLight.shadow.camera.right = size / 2
-  directionalLight.shadow.camera.top = size / 2
-  directionalLight.shadow.camera.bottom = -size / 2
+  const width = visibleWidthAtZDepth(-5, webgl.camera)
+  const height = 3
+  directionalLight.shadow.camera.left = -width / 2
+  directionalLight.shadow.camera.right = width / 2
+  directionalLight.shadow.camera.top = height / 2
+  directionalLight.shadow.camera.bottom = -height / 2
   directionalLight.shadow.camera.far = 100
 
   // uncomment this if there are some shadow artifacts
