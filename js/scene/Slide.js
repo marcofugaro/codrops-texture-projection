@@ -258,44 +258,6 @@ export class Slide extends THREE.Group {
       const targetCurve = this.targetCurves[i]
       const delay = this.delays[i]
 
-      // if the user has interacted
-      // displace the curve where the user has interacted
-      curve.points.forEach((point, j) => {
-        const { x, y } = point
-        const targetPoint = targetCurve.points[j]
-
-        if (this.mousePoint) {
-          // displace the curve points
-          if (point.distanceTo(this.mousePoint) < displacement) {
-            const direction = point.clone().sub(this.mousePoint)
-            const displacementAmount = displacement - direction.length()
-            direction.setLength(displacementAmount)
-            direction.add(point)
-
-            point.lerp(direction, dt * 6) // ✨ magic number
-          }
-
-          // and move them back to their original position
-          if (point.distanceTo(targetPoint) > 0.01) {
-            point.lerp(targetPoint, dt * 8) // ✨ magic number
-          }
-        }
-
-        // the waving effect
-        const { frequency, speed, amplitude } = this.webgl.controls.turbulence
-        const z = noise(x * frequency - time * speed, y * frequency) * amplitude
-        point.z = targetPoint.z + z
-      })
-
-      // update the debug mode lines
-      if (window.DEBUG && curve.mesh) {
-        curve.points.forEach((point, j) => {
-          const vertex = curve.mesh.geometry.vertices[j]
-          vertex.copy(point)
-        })
-        curve.mesh.geometry.verticesNeedUpdate = true
-      }
-
       if (this.tStart) {
         const delayDelay = 0.5 // ✨ magic number
 
@@ -311,6 +273,46 @@ export class Slide extends THREE.Group {
               (ANIMATION_DURATION + delay * (1 - delayDelay))
           )
         )
+      }
+
+      // if it's showing
+      if (this.percentages[i] > 0 && this.percentages[i] < 1) {
+        curve.points.forEach((point, j) => {
+          const { x, y } = point
+          const targetPoint = targetCurve.points[j]
+
+          // if the user has interacted
+          if (this.mousePoint) {
+            // displace the curve points
+            if (point.distanceTo(this.mousePoint) < displacement) {
+              const direction = point.clone().sub(this.mousePoint)
+              const displacementAmount = displacement - direction.length()
+              direction.setLength(displacementAmount)
+              direction.add(point)
+
+              point.lerp(direction, dt * 6) // ✨ magic number
+            }
+
+            // and move them back to their original position
+            if (point.distanceTo(targetPoint) > 0.01) {
+              point.lerp(targetPoint, dt * 8) // ✨ magic number
+            }
+          }
+
+          // the waving effect
+          const { frequency, speed, amplitude } = this.webgl.controls.turbulence
+          const z = noise(x * frequency - time * speed, y * frequency) * amplitude
+          point.z = targetPoint.z + z
+        })
+
+        // update the debug mode lines
+        if (window.DEBUG && curve.mesh) {
+          curve.points.forEach((point, j) => {
+            const vertex = curve.mesh.geometry.vertices[j]
+            vertex.copy(point)
+          })
+          curve.mesh.geometry.verticesNeedUpdate = true
+        }
       }
 
       // align the box on the curve
