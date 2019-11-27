@@ -20,7 +20,7 @@ export const ANIMATION_DURATION = 1.5 // seconds
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
 
-export class Slide extends THREE.Group {
+export class SlideNoise extends THREE.Group {
   instancedMesh
   // used for passing the transform to an instanced mesh
   dummy = new THREE.Object3D()

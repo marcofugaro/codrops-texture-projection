@@ -1,21 +1,8 @@
 import * as THREE from 'three'
 import assets from '../lib/AssetManager'
-import { Slide } from './Slide'
 
 // how much to wait until the animation of the next slides starts
 export const SLIDES_INTERVAL = 1.5 // seconds
-
-const IMAGES = [
-  'images/adult-beautiful-bikini-blue-pexels.jpg',
-  'images/christopher-campbell2-unsplash.jpg',
-  'images/tyler-nix-unsplash.jpg',
-]
-
-// preload the first texture
-const image1 = assets.queue({
-  url: IMAGES.shift(),
-  type: 'texture',
-})
 
 export class Slides extends THREE.Group {
   slides = []
@@ -24,12 +11,15 @@ export class Slides extends THREE.Group {
   constructor(webgl, options) {
     super(options)
     this.webgl = webgl
+    this.options = options
+
+    const { firstImage, otherImages } = this.options
 
     // initialize the first slide components
-    this.initSlide(image1)
+    this.initSlide(firstImage)
 
     // and initialize the other once they're loaded
-    IMAGES.forEach(image => {
+    otherImages.forEach(image => {
       assets
         .loadSingle({
           url: image,
@@ -40,6 +30,7 @@ export class Slides extends THREE.Group {
     })
 
     // make the first one enter
+    // TODO remove this setTimeout?
     setTimeout(() => {
       this.slides[this.slideIndex].animateTo(0.5)
     }, 16)
@@ -68,6 +59,8 @@ export class Slides extends THREE.Group {
   }
 
   initSlide = image => {
+    const { Slide } = this.options
+
     const texture = assets.get(image)
     const slide = new Slide(this.webgl, { texture })
     this.add(slide)

@@ -3,7 +3,7 @@
     "prestart": "npm run clean",
     "start": "NODE_ENV=development webpack-dev-server",
     "build": "NODE_ENV=production webpack",
-    "clean": "rimraf app.js"
+    "clean": "rimraf ./app*.js"
   },
   "browserslist": {
     "production": [

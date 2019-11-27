@@ -5,7 +5,6 @@ const openBrowser = require('react-dev-utils/openBrowser')
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin')
 const { prepareUrls } = require('react-dev-utils/WebpackDevServerUtils')
 const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
 const prettyMs = require('pretty-ms')
 const EventHooksPlugin = require('event-hooks-webpack-plugin')
 const chalk = require('chalk')
@@ -22,7 +21,11 @@ const urls = prepareUrls(PROTOCOL, HOST, PORT)
 
 module.exports = merge.smart(
   {
-    entry: './js/index.js',
+    entry: {
+      app: './js/index.js',
+      app2: './js/index2.js',
+      app3: './js/index3.js',
+    },
     module: {
       rules: [
         {
@@ -69,12 +72,12 @@ module.exports = merge.smart(
       public: urls.lanUrlForConfig,
       publicPath: '/',
       contentBase: __dirname,
-      // // trigger reload when files in contentBase folder change
-      // watchContentBase: true,
+      // trigger reload when files in contentBase folder change
+      watchContentBase: true,
       // but don't watch node_modules
-      // watchOptions: {
-      //   ignored: /node_modules/,
-      // },
+      watchOptions: {
+        ignored: /node_modules/,
+      },
       // serve everything in gzip
       compress: true,
       // Sssh...
@@ -86,11 +89,6 @@ module.exports = merge.smart(
       },
     },
     plugins: [
-      // Injects the development scripts.
-      new HtmlWebpackPlugin({
-        inject: true,
-        template: './index.html',
-      }),
       // Automatic rediscover of packages after `npm install`
       new WatchMissingNodeModulesPlugin('node_modules'),
       // TODO use webpack's api when it will be implemented
@@ -137,7 +135,7 @@ module.exports = merge.smart(
     // devtool: 'source-map',
     output: {
       path: __dirname,
-      filename: 'app.js',
+      filename: '[name].js',
       // change this if you're deploying on a subfolder
       publicPath: '',
     },

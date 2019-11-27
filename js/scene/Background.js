@@ -10,15 +10,19 @@ const blueGradient = assets.queue({
   type: 'texture',
 })
 
-export class Walls extends THREE.Group {
+export class Background extends THREE.Group {
   constructor(webgl, options) {
     super(options)
     this.webgl = webgl
 
     const geometry = new THREE.CylinderGeometry(4, 4, 2, 64)
     const material = new THREE.MeshLambertMaterial({
-      // TODO put this in a constant or something
-      color: '#5fb8d5',
+      color: webgl.controls.background,
+    })
+    webgl.controls.$onChanges(({ background }) => {
+      if (background) {
+        material.color = new THREE.Color(background.value)
+      }
     })
     const cylinder = new THREE.Mesh(geometry, material)
     cylinder.position.y = -3
