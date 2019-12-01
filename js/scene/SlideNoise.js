@@ -267,7 +267,7 @@ export class SlideNoise extends THREE.Group {
           this.previousPercentages[i],
           this.targetPercentage,
           // nice complicated equation! this equation defines the "feel" of the animation.
-          // a simplified version would be `(time - this.tStart) / ANIMATION_DURATION`
+          // a simplified version would be `(time  - (this.tStart + delay)) / ANIMATION_DURATION`
           clamp01(
             (time - (this.tStart + delay * delayDelay)) /
               (ANIMATION_DURATION + delay * (1 - delayDelay))
@@ -290,12 +290,12 @@ export class SlideNoise extends THREE.Group {
               direction.setLength(displacementAmount)
               direction.add(point)
 
-              point.lerp(direction, dt * 6) // ✨ magic number
+              point.lerp(direction, 0.2) // ✨ magic number
             }
 
             // and move them back to their original position
             if (point.distanceTo(targetPoint) > 0.01) {
-              point.lerp(targetPoint, dt * 8) // ✨ magic number
+              point.lerp(targetPoint, 0.27) // ✨ magic number
             }
           }
 
