@@ -20,6 +20,9 @@ export const ANIMATION_DURATION = 1.3 // seconds
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
 
+// how much behind the objects animate from
+const STARTING_Z = -2
+
 export class SlideSine extends THREE.Group {
   instancedMesh
   // used for passing the transform to an instanced mesh
@@ -87,7 +90,7 @@ export class SlideSine extends THREE.Group {
     this.instancedMesh.castShadow = true
     this.add(this.instancedMesh)
 
-    const minX = -visibleWidthAtZDepth(-1, this.webgl.camera) / 2 - width * 0.6
+    const minX = -visibleWidthAtZDepth(STARTING_Z, this.webgl.camera) / 2 - width * 0.6
 
     points.forEach((point, i) => {
       // the arriving point
@@ -178,7 +181,7 @@ export class SlideSine extends THREE.Group {
     const endX = minX * -1
 
     // TODO put this in a constant
-    const startZ = -2
+    const startZ = STARTING_Z
     const endZ = startZ
 
     for (let i = 0; i < segments; i++) {

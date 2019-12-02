@@ -4,7 +4,7 @@ import assets from './lib/AssetManager'
 import { addLights } from './scene/lights'
 import { Slides } from './scene/Slides'
 import { Background } from './scene/Background'
-import { SlideNoise } from './scene/SlideNoise'
+import { SlideSpiral } from './scene/SlideSpiral'
 
 window.DEBUG = window.location.search.includes('debug')
 
@@ -27,12 +27,13 @@ const webgl = new WebGLApp({
     // the interaction displacement
     displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
     // how much there is between the first and the last to arrive
-    delayFactor: new State.Slider(2.2, { min: 0, max: 10, step: 0.01 }),
+    delayFactor: new State.Slider(1.3, { min: 0, max: 5, step: 0.01 }),
     // the waving effect
     turbulence: {
-      speed: new State.Slider(0.2, { min: 0, max: 3, step: 0.01 }),
-      frequency: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
-      amplitude: new State.Slider(0.2, { min: 0, max: 2, step: 0.01 }),
+      speed: new State.Slider(1.3, { min: 0, max: 10, step: 0.01 }),
+      frequency: new State.Slider(0.8, { min: 0, max: 10, step: 0.01 }),
+      amplitude: new State.Slider(0.25, { min: 0, max: 3, step: 0.01 }),
+      attenuation: new State.Slider(1.3, { min: 0, max: 3, step: 0.01 }),
     },
   },
 })
@@ -70,7 +71,7 @@ assets.load({ renderer: webgl.renderer }).then(() => {
   // add any "WebGL components" here...
   // append them to the scene so you can
   // use them from other components easily
-  webgl.scene.slides = new Slides(webgl, { firstImage, otherImages: IMAGES, Slide: SlideNoise })
+  webgl.scene.slides = new Slides(webgl, { firstImage, otherImages: IMAGES, Slide: SlideSpiral })
   webgl.scene.add(webgl.scene.slides)
   webgl.scene.background = new Background(webgl)
   webgl.scene.add(webgl.scene.background)

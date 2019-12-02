@@ -20,6 +20,9 @@ export const ANIMATION_DURATION = 1.5 // seconds
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
 
+// how much behind the objects animate from
+const STARTING_Z = -1
+
 export class SlideNoise extends THREE.Group {
   instancedMesh
   // used for passing the transform to an instanced mesh
@@ -99,7 +102,7 @@ export class SlideNoise extends THREE.Group {
     this.instancedMesh.castShadow = true
     this.add(this.instancedMesh)
 
-    const minX = -visibleWidthAtZDepth(-1, this.webgl.camera) / 2 - width * 0.6
+    const minX = -visibleWidthAtZDepth(STARTING_Z, this.webgl.camera) / 2 - width * 0.6
 
     points.forEach((point, i) => {
       // the arriving point
@@ -189,8 +192,7 @@ export class SlideNoise extends THREE.Group {
     const startX = minX
     const endX = minX * -1
 
-    // TODO put this in a constant
-    const startZ = -1
+    const startZ = STARTING_Z
     const endZ = startZ
 
     for (let i = 0; i < segments; i++) {
@@ -202,9 +204,6 @@ export class SlideNoise extends THREE.Group {
       const noiseAmplitude = 0.6
       const noiseY = noise(offsetX * frequency) * noiseAmplitude * eases.quartOut(noiseAmount)
       const scaleY = mapRange(eases.quartIn(1 - noiseAmount), 0, 1, 0.2, 1)
-
-      // TODO try to do a spiral
-      // const noiseZ = noise(1000 + i * frequency) * 0.3
 
       const offsetZ = mapRangeTriple(i, 0, halfIndex, segments - 1, startZ, 0, endZ)
 
