@@ -176,6 +176,7 @@ export class SlideSine extends THREE.Group {
 
     // must be odds so we have the middle frame
     const segments = 51
+    const halfIndex = (segments - 1) / 2
 
     const startX = minX
     const endX = minX * -1
@@ -186,7 +187,6 @@ export class SlideSine extends THREE.Group {
 
     for (let i = 0; i < segments; i++) {
       const offsetX = mapRange(i, 0, segments - 1, startX, endX)
-      const halfIndex = segments / 2
 
       const noiseAmount = mapRangeTriple(i, 0, halfIndex, segments - 1, 1, 0, 1)
       const frequency = 0.2
@@ -195,13 +195,6 @@ export class SlideSine extends THREE.Group {
       const scaleY = mapRange(eases.expoIn(1 - noiseAmount), 0, 1, 0.3, 1)
 
       const offsetZ = mapRangeTriple(i, 0, halfIndex, segments - 1, startZ, 0, endZ)
-
-      // const helixDiameter = y
-      // const frequency = 0 // 0.3
-      // const helixY = Math.cos(((segments - 1) / 2 - i) * frequency) * helixDiameter
-      // const helixZ = Math.sin(((segments - 1) / 2 - i) * frequency) * helixDiameter
-
-      // points.push(new THREE.Vector3(x + offsetX, helixY * scaleY, offsetZ + helixZ * scaleY))
 
       points.push(new THREE.Vector3(x + offsetX, y * scaleY + noiseY, offsetZ + z))
     }

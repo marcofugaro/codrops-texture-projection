@@ -12,7 +12,7 @@ import {
   visibleWidthAtZDepth,
   mouseToCoordinates,
 } from '../lib/three-utils'
-import { poisson, mapRangeTriple, timed, noise } from '../lib/utils'
+import { poisson, timed, mapRangeTriple } from '../lib/utils'
 
 // how much the animation of a single box lasts
 export const ANIMATION_DURATION = 1.3 // seconds
@@ -25,7 +25,8 @@ export class SlideSpiral extends THREE.Group {
   // used for passing the transform to an instanced mesh
   dummy = new THREE.Object3D()
 
-  delays = []
+  delaysFromOutside = []
+  delaysFromCenter = []
   // the displaced curves
   curves = []
   // the pristine curves
@@ -65,7 +66,7 @@ export class SlideSpiral extends THREE.Group {
     this.NUM_INSTANCES = points.length
 
     // create the geometry and material
-    const geometry = new THREE.SphereBufferGeometry(0.08, 16, 16)
+    const geometry = new THREE.BoxBufferGeometry(0.1, 0.2, 0.1)
     const material = new ProjectedMaterial({
       camera: webgl.camera,
       texture,
@@ -87,14 +88,12 @@ export class SlideSpiral extends THREE.Group {
     this.instancedMesh.castShadow = true
     this.add(this.instancedMesh)
 
-    const minX = -visibleWidthAtZDepth(-1, this.webgl.camera) / 2 - width * 0.6
-
     points.forEach((point, i) => {
       // the arriving point
       const [x, y] = point
 
       // create the curves!
-      const curvePoints = this.generateCurve(x, y, 0, minX)
+      const curvePoints = this.generateCurve(x, y, 0)
       const curve = new THREE.CatmullRomCurve3(curvePoints)
       this.curves.push(curve)
       this.targetCurves.push(curve.clone())
@@ -113,8 +112,8 @@ export class SlideSpiral extends THREE.Group {
       }
 
       // give delay to each box
-      const delay = this.generateDelay(x, y, width, height)
-      this.delays.push(delay)
+      this.delaysFromOutside.push(this.generateDelayFromOutside(x, y, width, height))
+      this.delaysFromCenter.push(this.generateDelayFromCenter(x, y))
 
       // put it at its center position
       alignOnCurve(this.dummy, curve, 0.5)
@@ -131,11 +130,25 @@ export class SlideSpiral extends THREE.Group {
       this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
     })
 
-    this.delays = this.normalizeDelays(this.delays)
-    webgl.controls.$onChanges(({ delayFactor }) => {
+    this.delaysFromOutside = this.normalizeDelays(this.delaysFromOutside)
+    this.delaysFromCenter = this.normalizeDelays(this.delaysFromCenter)
+    webgl.controls.$onChanges(({ delayFactor, spiralRadius }) => {
       if (delayFactor) {
-        const delays = points.map(p => this.generateDelay(...p))
-        this.delays = this.normalizeDelays(delays)
+        const delaysFromCenter = points.map(p => this.generateDelayFromCenter(...p))
+        this.delaysFromCenter = this.normalizeDelays(delaysFromCenter)
+
+        const delaysFromOutside = points.map(p =>
+          this.generateDelayFromOutside(...p, width, height)
+        )
+        this.delaysFromOutside = this.normalizeDelays(delaysFromOutside)
+      }
+      if (spiralRadius) {
+        points.forEach((point, i) => {
+          const [x, y] = point
+          const newPoints = this.generateCurve(x, y, 0)
+          this.targetCurves[i].points = newPoints
+          this.curves[i].points = newPoints.map(p => p.clone())
+        })
       }
     })
 
@@ -168,44 +181,42 @@ export class SlideSpiral extends THREE.Group {
     }
   }
 
-  generateCurve(x, y, z, minX) {
+  generateCurve(x, y, z) {
     const points = []
 
     // must be odds so we have the middle frame
     const segments = 51
+    const halfIndex = (segments - 1) / 2
 
-    const startX = minX
-    const endX = minX * -1
-
-    // TODO put this in a constant
-    const startZ = -2
-    const endZ = startZ
+    const endZ = this.webgl.camera.position.z * 2
+    const startZ = endZ * -1
 
     for (let i = 0; i < segments; i++) {
-      const offsetX = mapRange(i, 0, segments - 1, startX, endX)
-      const halfIndex = segments / 2
+      const currentZ = mapRange(i, 0, segments - 1, startZ, endZ)
 
-      const noiseAmount = mapRangeTriple(i, 0, halfIndex, segments - 1, 1, 0, 1)
+      // how much to go from the tube to the final image, 0 is tube, 1 is final image
+      const scaleAmount = mapRangeTriple(i, 0, halfIndex, segments - 1, 1, 0, 1)
+      const scale = mapRange(eases.quartIn(1 - scaleAmount), 0, 1, 0, 1)
+
+      // radius and angle of the final image
+      const radius = Math.hypot(x, y)
+      const angle = Math.atan2(y, x)
+
+      // frequency of the spiral
       const frequency = 0.2
-      const noiseAmplitude = 0.4
-      const noiseY = noise(offsetX * frequency) * noiseAmplitude * eases.quartOut(noiseAmount)
-      const scaleY = mapRange(eases.expoIn(1 - noiseAmount), 0, 1, 0.3, 1)
 
-      const offsetZ = mapRangeTriple(i, 0, halfIndex, segments - 1, startZ, 0, endZ)
+      // radius of the tube where they travel
+      const { spiralRadius } = this.webgl.controls
+      const scaledRadius = radius * scale + spiralRadius * (1 - scale)
+      const helixX = scaledRadius * Math.cos((halfIndex - i) * frequency + angle)
+      const helixY = scaledRadius * Math.sin((halfIndex - i) * frequency + angle)
 
-      // const helixDiameter = y
-      // const frequency = 0 // 0.3
-      // const helixY = Math.cos(((segments - 1) / 2 - i) * frequency) * helixDiameter
-      // const helixZ = Math.sin(((segments - 1) / 2 - i) * frequency) * helixDiameter
-
-      // points.push(new THREE.Vector3(x + offsetX, helixY * scaleY, offsetZ + helixZ * scaleY))
-
-      points.push(new THREE.Vector3(x + offsetX, y * scaleY + noiseY, offsetZ + z))
+      points.push(new THREE.Vector3(helixX, helixY, currentZ))
     }
     return points
   }
 
-  generateDelay(x, y) {
+  generateDelayFromOutside(x, y, width, height) {
     const { delayFactor } = this.webgl.controls
 
     const center = new THREE.Vector2(0, 0)
@@ -213,14 +224,34 @@ export class SlideSpiral extends THREE.Group {
     const distance = targetPosition.distanceTo(center)
 
     // linear
-    // const delay = distance
+    const delay = Math.hypot(width / 2, height / 2) - distance
 
     // pow
     // const delay = (distance ** 2)
     // inverse pow
     // const delay = (distance ** 1 / 3)
     // log
-    const delay = Math.log(distance + 1)
+    // const delay = Math.log(distance + 1)
+
+    return delay * delayFactor
+  }
+
+  generateDelayFromCenter(x, y) {
+    const { delayFactor } = this.webgl.controls
+
+    const center = new THREE.Vector2(0, 0)
+    const targetPosition = new THREE.Vector2(x, y)
+    const distance = targetPosition.distanceTo(center)
+
+    // linear
+    const delay = distance
+
+    // pow
+    // const delay = (distance ** 2)
+    // inverse pow
+    // const delay = (distance ** 1 / 3)
+    // log
+    // const delay = Math.log(distance + 1)
 
     return delay * delayFactor
   }
@@ -248,7 +279,8 @@ export class SlideSpiral extends THREE.Group {
     for (let i = 0; i < this.NUM_INSTANCES; i++) {
       const curve = this.curves[i]
       const targetCurve = this.targetCurves[i]
-      const delay = this.delays[i]
+      const delay =
+        this.targetPercentage === 0.5 ? this.delaysFromOutside[i] : this.delaysFromCenter[i]
 
       if (this.tStart) {
         // where to put the box on the curve,
@@ -283,18 +315,6 @@ export class SlideSpiral extends THREE.Group {
               point.lerp(targetPoint, 0.27) // ✨ magic number
             }
           }
-
-          // the waving effect
-          const { frequency, speed, amplitude, attenuation } = this.webgl.controls.turbulence
-          const center = new THREE.Vector2(0, 0)
-          const position = new THREE.Vector2(x, y)
-          const distance = position.distanceTo(center)
-          // https://en.wikipedia.org/wiki/Damped_sine_wave
-          const z =
-            Math.exp(-distance * attenuation) *
-            Math.cos(2 * Math.PI * distance * frequency - time * speed) *
-            amplitude
-          point.z = targetPoint.z + z
         })
 
         // update the debug mode lines

@@ -1,7 +1,7 @@
 import State from 'controls-state'
 import WebGLApp from './lib/WebGLApp'
 import assets from './lib/AssetManager'
-import { addLights } from './scene/lights'
+import { addSpotLight } from './scene/spotLight'
 import { Slides } from './scene/Slides'
 import { Background } from './scene/Background'
 import { SlideSpiral } from './scene/SlideSpiral'
@@ -28,6 +28,8 @@ const webgl = new WebGLApp({
     displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
     // how much there is between the first and the last to arrive
     delayFactor: new State.Slider(1.3, { min: 0, max: 5, step: 0.01 }),
+    // how big is the spiral
+    spiralRadius: new State.Slider(0.8, { min: 0, max: 3, step: 0.01 }),
     // the waving effect
     turbulence: {
       speed: new State.Slider(1.3, { min: 0, max: 10, step: 0.01 }),
@@ -66,7 +68,7 @@ assets.load({ renderer: webgl.renderer }).then(() => {
   // move the camera behind
   webgl.camera.position.set(0, 0, 5)
 
-  addLights(webgl)
+  addSpotLight(webgl)
 
   // add any "WebGL components" here...
   // append them to the scene so you can
