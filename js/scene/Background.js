@@ -10,24 +10,10 @@ export class Background extends THREE.Group {
   constructor(webgl, options) {
     super(options)
     this.webgl = webgl
+    this.options = options
 
-    const geometry = new THREE.CylinderGeometry(4, 4, 2, 64)
-    const material = new THREE.MeshLambertMaterial({
-      color: webgl.controls.foreground,
-    })
-    webgl.controls.$onChanges(({ foreground }) => {
-      if (foreground) {
-        material.color = new THREE.Color(foreground.value)
-      }
-    })
-    const cylinder = new THREE.Mesh(geometry, material)
-    cylinder.position.y = -3
-    cylinder.position.z = -4
-    cylinder.receiveShadow = true
-    this.add(cylinder)
-
-    const geometry2 = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_WIDTH)
-    const material2 = new THREE.ShaderMaterial({
+    const geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_WIDTH)
+    const material = new THREE.ShaderMaterial({
       lights: true,
       uniforms: {
         ...THREE.ShaderLib['lambert'].uniforms,
@@ -56,12 +42,12 @@ export class Background extends THREE.Group {
     })
     webgl.controls.$onChanges(({ background }) => {
       if (background) {
-        material2.uniforms.color.value = new THREE.Color(background.value)
+        material.uniforms.color.value = new THREE.Color(background.value)
       }
     })
-    const wall = new THREE.Mesh(geometry2, material2)
-    wall.position.z = -8
-    wall.rotateZ(Math.PI)
-    this.add(wall)
+    const background = new THREE.Mesh(geometry, material)
+    background.position.z = -8
+    background.rotateZ(Math.PI)
+    this.add(background)
   }
 }

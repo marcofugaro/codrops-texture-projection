@@ -4,6 +4,7 @@ import assets from './lib/AssetManager'
 import { addLights } from './scene/lights'
 import { Slides } from './scene/Slides'
 import { Background } from './scene/Background'
+import { ForegroundCylinder } from './scene/ForegroundCylinder'
 import { SlideNoise } from './scene/SlideNoise'
 
 window.DEBUG = window.location.search.includes('debug')
@@ -24,7 +25,7 @@ const webgl = new WebGLApp({
     // TODO put this in a constant or somehitng
     color: '#3698D5',
     background: '#5fb8d5',
-    foreground: '#5fb8d5',
+    foreground: '#C19544',
     // the interaction displacement
     displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
     // how much there is between the first and the last to arrive
@@ -47,9 +48,9 @@ if (window.DEBUG) {
 webgl.canvas.style.visibility = 'hidden'
 
 const IMAGES = [
-  'images/adult-beautiful-bikini-blue-pexels.jpg',
-  'images/christopher-campbell2-unsplash.jpg',
-  'images/tyler-nix-unsplash.jpg',
+  'images/swimsuits/adult-beautiful-bikini-blue-pexels.jpg',
+  'images/swimsuits/christopher-campbell2-unsplash.jpg',
+  'images/swimsuits/tyler-nix-unsplash.jpg',
 ]
 
 // preload the first texture
@@ -75,6 +76,8 @@ assets.load({ renderer: webgl.renderer }).then(() => {
   webgl.scene.add(webgl.scene.slides)
   webgl.scene.background = new Background(webgl)
   webgl.scene.add(webgl.scene.background)
+  webgl.scene.foreground = new ForegroundCylinder(webgl)
+  webgl.scene.add(webgl.scene.foreground)
 
   // start animation loop
   webgl.start()

@@ -13,12 +13,18 @@ import {
   mouseToCoordinates,
 } from '../lib/three-utils'
 import { poisson, timed, mapRangeTriple } from '../lib/utils'
+import assets from '../lib/AssetManager'
 
 // how much the animation of a single box lasts
 export const ANIMATION_DURATION = 1.3 // seconds
 
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
+
+const tireKey = assets.queue({
+  url: 'tire.glb',
+  type: 'gltf',
+})
 
 export class SlideSpiral extends THREE.Group {
   instancedMesh
@@ -66,6 +72,8 @@ export class SlideSpiral extends THREE.Group {
     this.NUM_INSTANCES = points.length
 
     // create the geometry and material
+    const tire = assets.get(tireKey).scene.clone()
+    console.log(tire)
     const geometry = new THREE.BoxBufferGeometry(0.1, 0.2, 0.1)
     const material = new ProjectedMaterial({
       camera: webgl.camera,

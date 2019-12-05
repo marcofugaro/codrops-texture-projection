@@ -23,6 +23,8 @@ const TEXTURE_SCALE = 0.7
 // how much behind the objects animate from
 const STARTING_Z = -2
 
+const center = new THREE.Vector2(0, 0)
+
 export class SlideSine extends THREE.Group {
   instancedMesh
   // used for passing the transform to an instanced mesh
@@ -55,7 +57,7 @@ export class SlideSine extends THREE.Group {
       height = width * (1 / ratio)
     }
     // make it a little bigger
-    width = width * 1.1
+    width = width * 1.15
     height = height * 1.1
 
     // get the points xy coordinates based on poisson-disc sampling
@@ -204,7 +206,6 @@ export class SlideSine extends THREE.Group {
   generateDelay(x, y) {
     const { delayFactor } = this.webgl.controls
 
-    const center = new THREE.Vector2(0, 0)
     const targetPosition = new THREE.Vector2(x, y)
     const distance = targetPosition.distanceTo(center)
 
@@ -282,9 +283,8 @@ export class SlideSine extends THREE.Group {
 
           // the waving effect
           const { frequency, speed, amplitude, attenuation } = this.webgl.controls.turbulence
-          const center = new THREE.Vector2(0, 0)
-          const position = new THREE.Vector2(x, y)
-          const distance = position.distanceTo(center)
+
+          const distance = new THREE.Vector2(x, y).distanceTo(center)
           // https://en.wikipedia.org/wiki/Damped_sine_wave
           const z =
             Math.exp(-distance * attenuation) *

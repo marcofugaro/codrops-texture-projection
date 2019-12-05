@@ -1,13 +1,15 @@
 import * as THREE from 'three'
 
-export function addLights(webgl) {
+export function addLights(webgl, options = {}) {
+  const { position = new THREE.Vector3(0, 10, 10) } = options
+
   // enable shadows
   webgl.renderer.shadowMap.enabled = true
   webgl.renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6)
   directionalLight.castShadow = true
-  directionalLight.position.set(0, 10, 10)
+  directionalLight.position.copy(position)
 
   // higher values give better quality shadows
   // lower values give better performance
@@ -28,22 +30,6 @@ export function addLights(webgl) {
   // directionalLight.shadow.bias = -0.0001
 
   webgl.scene.add(directionalLight)
-
-  // // make sure the background is also #000000
-  // const spotLight = new THREE.SpotLight(0xffffff)
-  // spotLight.position.set(0, 2, 4)
-  // spotLight.angle = Math.PI / 6
-  // spotLight.penumbra = 0.5
-
-  // spotLight.castShadow = true
-
-  // spotLight.shadow.mapSize.width = 1024
-  // spotLight.shadow.mapSize.height = 1024
-
-  // spotLight.shadow.camera.far = 100
-  // spotLight.shadow.camera.fov = 30
-
-  // webgl.scene.add(spotLight)
 
   const ambientLight = new THREE.AmbientLight(0xcccccc, 0.9)
   webgl.scene.add(ambientLight)

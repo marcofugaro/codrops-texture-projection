@@ -16,15 +16,15 @@ export default async function loadEnvMap(url, options) {
   if (options.equirectangular) {
     const texture = await loadTexture(url, { renderer })
 
-    const cubemap = new THREE.WebGLRenderTargetCube(1024, 1024).fromEquirectangularTexture(
+    const cubeRenderTarget = new THREE.WebGLRenderTargetCube(1024, 1024).fromEquirectangularTexture(
       renderer,
       texture
     )
 
-    const cubeMapTexture = cubemap.texture
+    const cubeMapTexture = cubeRenderTarget.texture
 
     // renderTarget is used for the scene.background
-    cubeMapTexture.renderTarget = cubemap.renderTarget
+    cubeMapTexture.renderTarget = cubeRenderTarget
 
     texture.dispose() // dispose original texture
     texture.image.data = null // remove Image reference

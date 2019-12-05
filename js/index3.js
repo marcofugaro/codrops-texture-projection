@@ -22,7 +22,7 @@ const webgl = new WebGLApp({
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
     // TODO put this in a constant or somehitng
-    color: '#3698D5',
+    color: '#E7E200',
     background: '#5fb8d5',
     // the interaction displacement
     displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
@@ -49,9 +49,12 @@ if (window.DEBUG) {
 webgl.canvas.style.visibility = 'hidden'
 
 const IMAGES = [
-  'images/adult-beautiful-bikini-blue-pexels.jpg',
-  'images/christopher-campbell2-unsplash.jpg',
-  'images/tyler-nix-unsplash.jpg',
+  'images/cars/olav-tvedt-unsplash.jpg',
+  'images/cars/dhiva-krishna-unsplash.jpg',
+  'images/cars/adils-photography-unsplash.jpg',
+  'images/cars/martin-katler-unsplash.jpg',
+  'images/cars/mohammad-aqhib-unsplash.jpg',
+  'images/cars/ville-kaisla-unsplash.jpg',
 ]
 
 // preload the first texture
