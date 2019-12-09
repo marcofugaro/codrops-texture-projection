@@ -68,7 +68,7 @@ export class SlideSine extends THREE.Group {
     this.NUM_INSTANCES = this.points.length
 
     // create the geometry and material
-    const geometry = new THREE.SphereBufferGeometry(0.08, 16, 16)
+    const geometry = new THREE.SphereBufferGeometry(0.08, 10, 10)
     const material = new ProjectedMaterial({
       camera: webgl.camera,
       texture,
