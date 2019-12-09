@@ -365,9 +365,15 @@ export class SlideSpiral extends THREE.Group {
       alignOnCurve(this.dummy, curve, this.percentages[i])
 
       // add the rotation effect
-      this.dummy.rotateX(OPTIMAL_ROTATION)
-      this.dummy.rotateX(-this.rotations[i] * 0.2)
-      this.dummy.rotateZ(this.rotations[i])
+      const MAX_ROTATION_DISTANCE = 0.3 // how much distance from the middle the rotation has still effect
+      const fromMiddle = Math.abs(this.percentages[i] - 0.5)
+      if (fromMiddle < MAX_ROTATION_DISTANCE * 1.1) {
+        const rotationAmount = eases.expoIn(mapRange(fromMiddle, 0, MAX_ROTATION_DISTANCE, 1, 0, true))
+
+        this.dummy.rotateX(OPTIMAL_ROTATION * rotationAmount)
+        this.dummy.rotateX(-this.rotations[i] * 0.2 * rotationAmount)
+        this.dummy.rotateZ(this.rotations[i] * rotationAmount)
+      }
 
       this.dummy.updateMatrix()
       this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
