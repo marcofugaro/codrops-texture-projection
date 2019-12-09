@@ -10,14 +10,9 @@
 
 body {
   margin: 0;
-  --blue-light: #5e78e1;
-  --blue: #2845b8;
-  --blue-dark: #12215d;
   --color-text: white;
-  /* the background of the scene */
-  --color-bg: #6bcfef;
-  --color-link: var(--blue);
-  --color-link-hover: var(--blue-dark);
+  --color-link: var(--color-primary);
+  --color-link-hover: var(--color-accent);
   color: var(--color-text);
   background-color: var(--color-bg);
   font-family: Playfair Display, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
@@ -108,7 +103,7 @@ a:focus {
 
 .frame__demo--current,
 .frame__demo--current:hover {
-  color: var(--color-text);
+  color: var(--accent);
 }
 
 .content {
@@ -152,7 +147,7 @@ a:focus {
     color: white;
   }
   .frame__tagline {
-    color: var(--blue-light);
+    color: var(--color-primary);
     margin: 0;
     opacity: 0.5;
   }
@@ -170,7 +165,8 @@ a:focus {
   .frame__next {
     pointer-events: auto;
     height: 4rem;
-    fill: #8b98e6;
+    fill: var(--color-primary);
+    opacity: 0.6;
     cursor: pointer;
     transition: all 0.1s ease;
   }

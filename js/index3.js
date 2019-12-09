@@ -19,7 +19,6 @@ const webgl = new WebGLApp({
   showFps: true, // window.DEBUG,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
-    // TODO put this in a constant or somehitng
     color: '#E7E200',
     // the interaction displacement
     displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
