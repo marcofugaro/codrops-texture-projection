@@ -19,6 +19,7 @@ export function noise(...args) {
   }
 }
 
+// https://bl.ocks.org/mbostock/dbb02448b0f93e4c82c3
 export function poisson(range, minRadius, maxRarius) {
   // the poisson-disk-sampling library doesn't work well
   // with small numbers
@@ -56,4 +57,21 @@ export function timed(fn, label) {
     console.timeEnd(`⏱${label}`)
     return ret
   }
+}
+
+//  Impulse function from Iñigo Quiles
+//  https://www.iquilezles.org/www/articles/functions/functions.htm
+function impulse(x, strength) {
+  const h = strength * x
+  return h * Math.exp(1.0 - h)
+}
+
+// like impulse, but repeated
+export function impulseMultiple(x, strength, interval) {
+  return impulse((x % interval), strength)
+}
+
+// https://en.wikipedia.org/wiki/Damped_sine_wave
+export function dampedSin(x, attenuation, frequency, offset) {
+  return Math.exp(-x * attenuation) * Math.cos(2 * Math.PI * x * frequency + offset)
 }

@@ -45,29 +45,28 @@ export class SlideNoise extends THREE.Group {
 
     // calculate the width and height the boxes will stay in
     const ratio = texture.image.naturalWidth / texture.image.naturalHeight
-    let width
-    let height
     if (ratio < 1) {
-      height = visibleHeightAtZDepth(0, webgl.camera) * TEXTURE_SCALE
-      width = height * ratio
+      this.height = visibleHeightAtZDepth(0, webgl.camera) * TEXTURE_SCALE
+      this.width = this.height * ratio
     } else {
-      width = visibleWidthAtZDepth(0, webgl.camera) * TEXTURE_SCALE
-      height = width * (1 / ratio)
+      this.width = visibleWidthAtZDepth(0, webgl.camera) * TEXTURE_SCALE
+      this.height = this.width * (1 / ratio)
     }
     // make it a little bigger
-    width = width * 1.5
-    height = height * 1.1
+    this.width *= 1.5
+    this.height *= 1.1
 
     // get the points xy coordinates based on poisson-disc sampling
     const poissonSampling = window.DEBUG ? timed(poisson, 'Poisson-disc sampling') : poisson
-    let points = poissonSampling([width, height], 7.73, 9.66)
+    this.points = poissonSampling([this.width, this.height], 7.73, 9.66)
 
-    points = points.filter(([x, y]) => {
+    // add the left/right waves form
+    this.points = this.points.filter(([x, y]) => {
       if (x < (Math.sin(y * 3) * Math.sin(y * 2) * Math.sin(y * 4.7) * 0.5 + 0.5) * 0.7) {
         return false
       }
 
-      if (x > (Math.sin(y * 3) * Math.sin(y * 2) * Math.sin(y * 4.7) * 0.5 - 0.5) * 0.7 + width) {
+      if (x > (Math.sin(y * 3) * Math.sin(y * 2) * Math.sin(y * 4.7) * 0.5 - 0.5) * 0.7 + this.width) {
         return false
       }
 
@@ -75,9 +74,9 @@ export class SlideNoise extends THREE.Group {
     })
 
     // center them
-    points = points.map(point => [point[0] - width / 2, point[1] - height / 2])
+    this.points = this.points.map(point => [point[0] - this.width / 2, point[1] - this.height / 2])
 
-    this.NUM_INSTANCES = points.length
+    this.NUM_INSTANCES = this.points.length
 
     // create the geometry and material
     const geometry = new THREE.BoxBufferGeometry(0.1, 0.2, 0.1)
@@ -102,9 +101,9 @@ export class SlideNoise extends THREE.Group {
     this.instancedMesh.castShadow = true
     this.add(this.instancedMesh)
 
-    const minX = -visibleWidthAtZDepth(STARTING_Z, this.webgl.camera) / 2 - width * 0.6
+    const minX = -visibleWidthAtZDepth(STARTING_Z, this.webgl.camera) / 2 - this.width * 0.6
 
-    points.forEach((point, i) => {
+    this.points.forEach((point, i) => {
       // the arriving point
       const [x, y] = point
 
@@ -149,7 +148,7 @@ export class SlideNoise extends THREE.Group {
     this.delays = this.normalizeDelays(this.delays)
     webgl.controls.$onChanges(({ delayFactor }) => {
       if (delayFactor) {
-        const delays = points.map(p => this.generateDelay(...p))
+        const delays = this.points.map(p => this.generateDelay(...p))
         this.delays = this.normalizeDelays(delays)
       }
     })

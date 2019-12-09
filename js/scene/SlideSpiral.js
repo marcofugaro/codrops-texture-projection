@@ -11,8 +11,9 @@ import {
   visibleHeightAtZDepth,
   visibleWidthAtZDepth,
   mouseToCoordinates,
+  extractGeometry,
 } from '../lib/three-utils'
-import { poisson, timed, mapRangeTriple } from '../lib/utils'
+import { poisson, timed, mapRangeTriple, impulseMultiple } from '../lib/utils'
 import assets from '../lib/AssetManager'
 
 // how much the animation of a single box lasts
@@ -21,22 +22,34 @@ export const ANIMATION_DURATION = 1.3 // seconds
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
 
+// the x rotation so the tires are nicely flat
+const OPTIMAL_ROTATION = Math.PI / 3
+
 const tireKey = assets.queue({
   url: 'tire.glb',
   type: 'gltf',
 })
+
+const center = new THREE.Vector2(0, 0)
 
 export class SlideSpiral extends THREE.Group {
   instancedMesh
   // used for passing the transform to an instanced mesh
   dummy = new THREE.Object3D()
 
-  delaysFromOutside = []
+  points = []
+
+  distancesFromPerimeter=[]
+  distancesFromCenter = []
+  delaysFromPerimeter = []
   delaysFromCenter = []
+
   // the displaced curves
   curves = []
   // the pristine curves
   targetCurves = []
+  // the rotation effect
+  rotations = []
 
   // used for the animation lerping
   previousPercentages = []
@@ -47,34 +60,34 @@ export class SlideSpiral extends THREE.Group {
     super(options)
     this.webgl = webgl
 
+    this.initialCameraZ = this.webgl.camera.position.z
+
     // calculate the width and height the boxes will stay in
     const ratio = texture.image.naturalWidth / texture.image.naturalHeight
-    let width
-    let height
     if (ratio < 1) {
-      height = visibleHeightAtZDepth(0, webgl.camera) * TEXTURE_SCALE
-      width = height * ratio
+      this.height = visibleHeightAtZDepth(0, webgl.camera) * TEXTURE_SCALE
+      this.width = this.height * ratio
     } else {
-      width = visibleWidthAtZDepth(0, webgl.camera) * TEXTURE_SCALE
-      height = width * (1 / ratio)
+      this.width = visibleWidthAtZDepth(0, webgl.camera) * TEXTURE_SCALE
+      this.height = this.width * (1 / ratio)
     }
     // make it a little bigger
-    width = width * 1.1
-    height = height * 1.1
+    this.width *= 1.1
+    this.height *= 1.1
 
     // get the points xy coordinates based on poisson-disc sampling
     const poissonSampling = window.DEBUG ? timed(poisson, 'Poisson-disc sampling') : poisson
-    let points = poissonSampling([width, height], 8, 9.66)
+    this.points = poissonSampling([this.width, this.height], 8, 9.66)
 
     // center them
-    points = points.map(point => [point[0] - width / 2, point[1] - height / 2])
+    this.points = this.points.map(point => [point[0] - this.width / 2, point[1] - this.height / 2])
 
-    this.NUM_INSTANCES = points.length
+    this.NUM_INSTANCES = this.points.length
 
-    // create the geometry and material
     const tire = assets.get(tireKey).scene.clone()
-    console.log(tire)
-    const geometry = new THREE.BoxBufferGeometry(0.1, 0.2, 0.1)
+    const geometry = extractGeometry(tire)
+    geometry.scale(0.03, 0.03, 0.03)
+
     const material = new ProjectedMaterial({
       camera: webgl.camera,
       texture,
@@ -96,7 +109,7 @@ export class SlideSpiral extends THREE.Group {
     this.instancedMesh.castShadow = true
     this.add(this.instancedMesh)
 
-    points.forEach((point, i) => {
+    this.points.forEach((point, i) => {
       // the arriving point
       const [x, y] = point
 
@@ -110,7 +123,7 @@ export class SlideSpiral extends THREE.Group {
       if (window.DEBUG && i % 10 === 0) {
         const curveGeometry = new THREE.Geometry().setFromPoints(curve.points)
         const curveMaterial = new THREE.LineBasicMaterial({
-          color: 0x000000,
+          color: 0xffffff,
           transparent: true,
           opacity: 0.2,
         })
@@ -120,11 +133,14 @@ export class SlideSpiral extends THREE.Group {
       }
 
       // give delay to each box
-      this.delaysFromOutside.push(this.generateDelayFromOutside(x, y, width, height))
-      this.delaysFromCenter.push(this.generateDelayFromCenter(x, y))
+      this.distancesFromPerimeter.push(this.getDistanceFromPerimeter(x, y))
+      this.distancesFromCenter.push(this.getDistanceFromCenter(x, y))
+      this.delaysFromPerimeter.push(this.generateDelay(this.distancesFromPerimeter[i]))
+      this.delaysFromCenter.push(this.generateDelay(this.distancesFromCenter[i]))
 
       // put it at its center position
       alignOnCurve(this.dummy, curve, 0.5)
+      this.dummy.rotateX(OPTIMAL_ROTATION)
       this.dummy.updateMatrix()
       this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
 
@@ -138,24 +154,29 @@ export class SlideSpiral extends THREE.Group {
       this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
     })
 
-    this.delaysFromOutside = this.normalizeDelays(this.delaysFromOutside)
+    this.delaysFromPerimeter = this.normalizeDelays(this.delaysFromPerimeter)
     this.delaysFromCenter = this.normalizeDelays(this.delaysFromCenter)
     webgl.controls.$onChanges(({ delayFactor, spiralRadius }) => {
       if (delayFactor) {
-        const delaysFromCenter = points.map(p => this.generateDelayFromCenter(...p))
+        const delaysFromCenter = this.points.map((p, i) => this.generateDelay(this.distancesFromCenter[i]))
         this.delaysFromCenter = this.normalizeDelays(delaysFromCenter)
 
-        const delaysFromOutside = points.map(p =>
-          this.generateDelayFromOutside(...p, width, height)
+        const delaysFromPerimeter = this.points.map((p, i) =>
+          this.generateDelay(this.distancesFromPerimeter[i])
         )
-        this.delaysFromOutside = this.normalizeDelays(delaysFromOutside)
+        this.delaysFromPerimeter = this.normalizeDelays(delaysFromPerimeter)
       }
       if (spiralRadius) {
-        points.forEach((point, i) => {
+        this.points.forEach((point, i) => {
           const [x, y] = point
           const newPoints = this.generateCurve(x, y, 0)
           this.targetCurves[i].points = newPoints
           this.curves[i].points = newPoints.map(p => p.clone())
+
+          // update also the curve points if they're visible
+          if (window.DEBUG) {
+            this.updateCurvePoints(this.curves[i])
+          }
         })
       }
     })
@@ -163,6 +184,9 @@ export class SlideSpiral extends THREE.Group {
     // put the animation at 0
     this.percentages.length = this.NUM_INSTANCES
     this.percentages.fill(0)
+
+    // fill the rotations
+    this.rotations = Array(this.NUM_INSTANCES).fill(0)
   }
 
   onPointerMove(event, [x, y]) {
@@ -196,7 +220,7 @@ export class SlideSpiral extends THREE.Group {
     const segments = 51
     const halfIndex = (segments - 1) / 2
 
-    const endZ = this.webgl.camera.position.z * 2
+    const endZ = this.initialCameraZ * 2
     const startZ = endZ * -1
 
     for (let i = 0; i < segments; i++) {
@@ -204,7 +228,7 @@ export class SlideSpiral extends THREE.Group {
 
       // how much to go from the tube to the final image, 0 is tube, 1 is final image
       const scaleAmount = mapRangeTriple(i, 0, halfIndex, segments - 1, 1, 0, 1)
-      const scale = mapRange(eases.quartIn(1 - scaleAmount), 0, 1, 0, 1)
+      const scale = mapRange(eases.expoIn(1 - scaleAmount), 0, 1, 0, 1)
 
       // radius and angle of the final image
       const radius = Math.hypot(x, y)
@@ -224,32 +248,22 @@ export class SlideSpiral extends THREE.Group {
     return points
   }
 
-  generateDelayFromOutside(x, y, width, height) {
-    const { delayFactor } = this.webgl.controls
-
-    const center = new THREE.Vector2(0, 0)
+  getDistanceFromCenter(x, y) {
     const targetPosition = new THREE.Vector2(x, y)
     const distance = targetPosition.distanceTo(center)
 
-    // linear
-    const delay = Math.hypot(width / 2, height / 2) - distance
-
-    // pow
-    // const delay = (distance ** 2)
-    // inverse pow
-    // const delay = (distance ** 1 / 3)
-    // log
-    // const delay = Math.log(distance + 1)
-
-    return delay * delayFactor
+    return distance
   }
 
-  generateDelayFromCenter(x, y) {
-    const { delayFactor } = this.webgl.controls
-
-    const center = new THREE.Vector2(0, 0)
+  getDistanceFromPerimeter(x, y) {
     const targetPosition = new THREE.Vector2(x, y)
     const distance = targetPosition.distanceTo(center)
+
+    return Math.hypot(this.width / 2, this.height / 2) - distance
+  }
+
+  generateDelay(distance) {
+    const { delayFactor } = this.webgl.controls
 
     // linear
     const delay = distance
@@ -281,6 +295,18 @@ export class SlideSpiral extends THREE.Group {
     this.targetPercentage = percentage
   }
 
+  updateCurvePoints = (curve) => {
+    if (!curve.mesh) {
+      return
+    }
+
+    curve.points.forEach((p, j) => {
+      const vertex = curve.mesh.geometry.vertices[j]
+      vertex.copy(p)
+    })
+    curve.mesh.geometry.verticesNeedUpdate = true
+  }
+
   update(dt, time) {
     const { displacement } = this.webgl.controls
 
@@ -288,7 +314,7 @@ export class SlideSpiral extends THREE.Group {
       const curve = this.curves[i]
       const targetCurve = this.targetCurves[i]
       const delay =
-        this.targetPercentage === 0.5 ? this.delaysFromOutside[i] : this.delaysFromCenter[i]
+        this.targetPercentage === 0.5 ? this.delaysFromPerimeter[i] : this.delaysFromCenter[i]
 
       if (this.tStart) {
         // where to put the box on the curve,
@@ -303,7 +329,6 @@ export class SlideSpiral extends THREE.Group {
       // if it's showing
       if (this.percentages[i] > 0 && this.percentages[i] < 1) {
         curve.points.forEach((point, j) => {
-          const { x, y } = point
           const targetPoint = targetCurve.points[j]
 
           // if the user has interacted
@@ -326,17 +351,24 @@ export class SlideSpiral extends THREE.Group {
         })
 
         // update the debug mode lines
-        if (window.DEBUG && curve.mesh) {
-          curve.points.forEach((point, j) => {
-            const vertex = curve.mesh.geometry.vertices[j]
-            vertex.copy(point)
-          })
-          curve.mesh.geometry.verticesNeedUpdate = true
+        if (window.DEBUG) {
+          this.updateCurvePoints(curve)
         }
+
+        // rotate the tires
+        const { frequency, speed, amplitude, attenuation } = this.webgl.controls.turbulence
+        const distance = this.distancesFromPerimeter[i]
+        this.rotations[i] = impulseMultiple((distance + time * speed) * frequency, attenuation, 1) * amplitude
       }
 
       // align the box on the curve
       alignOnCurve(this.dummy, curve, this.percentages[i])
+
+      // add the rotation effect
+      this.dummy.rotateX(OPTIMAL_ROTATION)
+      this.dummy.rotateX(-this.rotations[i] * 0.2)
+      this.dummy.rotateZ(this.rotations[i])
+
       this.dummy.updateMatrix()
       this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
       this.instancedMesh.instanceMatrix.needsUpdate = true

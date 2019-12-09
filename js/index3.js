@@ -1,9 +1,8 @@
 import State from 'controls-state'
 import WebGLApp from './lib/WebGLApp'
 import assets from './lib/AssetManager'
-import { addSpotLight } from './scene/spotLight'
+import { addSpotLight } from './scene/lights'
 import { Slides } from './scene/Slides'
-import { Background } from './scene/Background'
 import { SlideSpiral } from './scene/SlideSpiral'
 
 window.DEBUG = window.location.search.includes('debug')
@@ -15,15 +14,13 @@ const canvas = document.querySelector('#app')
 const webgl = new WebGLApp({
   canvas,
   // set the scene background color
-  // TODO put this in a constant or somehitng
-  background: '#5fb8d5',
+  background: '#000000',
   // show the fps counter from stats.js
   showFps: true, // window.DEBUG,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
     // TODO put this in a constant or somehitng
     color: '#E7E200',
-    background: '#5fb8d5',
     // the interaction displacement
     displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
     // how much there is between the first and the last to arrive
@@ -32,10 +29,10 @@ const webgl = new WebGLApp({
     spiralRadius: new State.Slider(0.8, { min: 0, max: 3, step: 0.01 }),
     // the waving effect
     turbulence: {
-      speed: new State.Slider(1.3, { min: 0, max: 10, step: 0.01 }),
-      frequency: new State.Slider(0.8, { min: 0, max: 10, step: 0.01 }),
-      amplitude: new State.Slider(0.25, { min: 0, max: 3, step: 0.01 }),
-      attenuation: new State.Slider(1.3, { min: 0, max: 3, step: 0.01 }),
+      speed: new State.Slider(1.2, { min: 0, max: 5, step: 0.01 }),
+      frequency: new State.Slider(0.15, { min: 0, max: 2, step: 0.01 }),
+      amplitude: new State.Slider(3, { min: 0, max: 5, step: 0.01 }),
+      attenuation: new State.Slider(50, { min: 1, max: 100, step: 0.01 }),
     },
   },
 })
@@ -49,12 +46,9 @@ if (window.DEBUG) {
 webgl.canvas.style.visibility = 'hidden'
 
 const IMAGES = [
-  'images/cars/olav-tvedt-unsplash.jpg',
   'images/cars/dhiva-krishna-unsplash.jpg',
   'images/cars/adils-photography-unsplash.jpg',
-  'images/cars/martin-katler-unsplash.jpg',
-  'images/cars/mohammad-aqhib-unsplash.jpg',
-  'images/cars/ville-kaisla-unsplash.jpg',
+  'images/cars/olav-tvedt-unsplash.jpg',
 ]
 
 // preload the first texture
@@ -78,8 +72,6 @@ assets.load({ renderer: webgl.renderer }).then(() => {
   // use them from other components easily
   webgl.scene.slides = new Slides(webgl, { firstImage, otherImages: IMAGES, Slide: SlideSpiral })
   webgl.scene.add(webgl.scene.slides)
-  webgl.scene.background = new Background(webgl)
-  webgl.scene.add(webgl.scene.background)
 
   // start animation loop
   webgl.start()

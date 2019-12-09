@@ -25,7 +25,7 @@ const webgl = new WebGLApp({
     // TODO put this in a constant or somehitng
     color: '#3698D5',
     background: '#5fb8d5',
-    foreground: '#C19544',
+    foreground: '#CDAD53',
     // the interaction displacement
     displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
     // how much there is between the first and the last to arrive

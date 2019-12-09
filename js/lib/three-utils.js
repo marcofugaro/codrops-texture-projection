@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { BufferGeometryUtils } from 'three/examples/jsm/utils/BufferGeometryUtils'
 
 // from https://stackoverflow.com/questions/11179327/orient-objects-rotation-to-a-spline-point-tangent-in-three-js
 export function alignOnCurve(object, curve, percentage) {
@@ -75,4 +76,16 @@ export function monkeyPatch(shader, { header = '', main = '', ...replaces }) {
       ${main}
     `
   )
+}
+
+// extract all geometry from a gltf scene
+export function extractGeometry(gltf) {
+  const geometries = []
+  gltf.traverse(child => {
+    if (child.isMesh) {
+      geometries.push(child.geometry)
+    }
+  })
+
+  return BufferGeometryUtils.mergeBufferGeometries(geometries)
 }
