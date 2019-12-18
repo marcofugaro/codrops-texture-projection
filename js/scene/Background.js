@@ -1,9 +1,6 @@
 import * as THREE from 'three'
-import lambertVert from 'three/src/renderers/shaders/ShaderLib/meshlambert_vert.glsl'
-import lambertFrag from 'three/src/renderers/shaders/ShaderLib/meshlambert_frag.glsl'
 import { monkeyPatch } from '../lib/three-utils'
 
-// TODO make this responsive
 const PLANE_WIDTH = 21
 
 export class Background extends THREE.Group {
@@ -19,7 +16,7 @@ export class Background extends THREE.Group {
         ...THREE.ShaderLib['lambert'].uniforms,
         color: { value: new THREE.Color(webgl.controls.background) },
       },
-      vertexShader: monkeyPatch(lambertVert, {
+      vertexShader: monkeyPatch(THREE.ShaderChunk['meshlambert_vert'], {
         header: `
           varying vec2 vUv;
         `,
@@ -27,7 +24,7 @@ export class Background extends THREE.Group {
           vUv = uv;
         `,
       }),
-      fragmentShader: monkeyPatch(lambertFrag, {
+      fragmentShader: monkeyPatch(THREE.ShaderChunk['meshlambert_frag'], {
         header: `
           varying vec2 vUv;
           uniform vec3 color;

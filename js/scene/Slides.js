@@ -30,10 +30,7 @@ export class Slides extends THREE.Group {
     })
 
     // make the first one enter
-    // TODO remove this setTimeout?
-    setTimeout(() => {
-      this.slides[this.slideIndex].animateTo(0.5)
-    }, 16)
+    this.slides[this.slideIndex].animateTo(0.5)
 
     // change slides on the prev/next button click
     const prevButton = document.querySelector('.frame__prev')

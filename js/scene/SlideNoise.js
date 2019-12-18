@@ -66,7 +66,10 @@ export class SlideNoise extends THREE.Group {
         return false
       }
 
-      if (x > (Math.sin(y * 3) * Math.sin(y * 2) * Math.sin(y * 4.7) * 0.5 - 0.5) * 0.7 + this.width) {
+      if (
+        x >
+        (Math.sin(y * 3) * Math.sin(y * 2) * Math.sin(y * 4.7) * 0.5 - 0.5) * 0.7 + this.width
+      ) {
         return false
       }
 
@@ -212,22 +215,9 @@ export class SlideNoise extends THREE.Group {
   }
 
   generateDelay(x, y) {
-    // const distancePoint = new THREE.Vector3(
-    //   width * 0 - width / 2,
-    //   height * 0.5 - height / 2,
-    //   z
-    // )
-    // const arrivingPosition = new THREE.Vector3(x, y, z)
-    // const distance = arrivingPosition.distanceTo(distancePoint)
-
-    // const delay = Math.pow(distance, 2)
-    // const delay = distance * 2
-
     const { delayFactor } = this.webgl.controls
     const frequency = 0.5
     const delay = (noise(x * frequency, y * frequency) * 0.5 + 0.5) * delayFactor
-
-    // const delay = Math.random() * 3
     return delay
   }
 
@@ -256,7 +246,7 @@ export class SlideNoise extends THREE.Group {
       const targetCurve = this.targetCurves[i]
       const delay = this.delays[i]
 
-      if (this.tStart) {
+      if (this.tStart !== undefined) {
         const delayDelay = 0.5 // ✨ magic number
 
         // where to put the box on the curve,

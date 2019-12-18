@@ -7,6 +7,8 @@ import { SlideSpiral } from './scene/SlideSpiral'
 
 window.DEBUG = window.location.search.includes('debug')
 
+const IS_MOBILE = window.matchMedia('(max-width: 53em)').matches
+
 // grab our canvas
 const canvas = document.querySelector('#app')
 
@@ -16,7 +18,7 @@ const webgl = new WebGLApp({
   // set the scene background color
   background: '#000000',
   // show the fps counter from stats.js
-  showFps: true, // window.DEBUG,
+  showFps: window.DEBUG,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
     color: '#E7E200',
@@ -34,6 +36,8 @@ const webgl = new WebGLApp({
       attenuation: new State.Slider(50, { min: 1, max: 100, step: 0.01 }),
     },
   },
+  // fix the height on mobile
+  height: IS_MOBILE ? 500 : undefined,
 })
 
 // attach it to the window to inspect in the console

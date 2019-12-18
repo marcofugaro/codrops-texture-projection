@@ -181,7 +181,6 @@ export class SlideSine extends THREE.Group {
     const startX = minX
     const endX = minX * -1
 
-    // TODO put this in a constant
     const startZ = STARTING_Z
     const endZ = startZ
 
@@ -245,7 +244,7 @@ export class SlideSine extends THREE.Group {
       const targetCurve = this.targetCurves[i]
       const delay = this.delays[i]
 
-      if (this.tStart) {
+      if (this.tStart !== undefined) {
         // where to put the box on the curve,
         // 0 is left of the screen, 0.5 center of the screen, 1 is right of the screen
         this.percentages[i] = lerp(

@@ -106,6 +106,22 @@ a:focus {
   color: var(--accent);
 }
 
+.frame__prev,
+.frame__next {
+  pointer-events: auto;
+  height: 4rem;
+  fill: var(--color-primary);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+.frame__prev:active,
+.frame__next:active {
+  transform: scale(1.1);
+  transition: none;
+}
+
 .content {
   display: flex;
   flex-direction: column;
@@ -161,24 +177,6 @@ a:focus {
     padding: 0;
   }
 
-  .frame__prev,
-  .frame__next {
-    pointer-events: auto;
-    height: 4rem;
-    fill: var(--color-primary);
-    opacity: 0.6;
-    cursor: pointer;
-    transition: all 0.1s ease;
-  }
-  .frame__prev:hover,
-  .frame__next:hover {
-    transform: scale(1.2);
-  }
-  .frame__prev:active,
-  .frame__next:active {
-    transform: scale(1.1);
-    transition: none;
-  }
   .frame__prev {
     grid-area: prev;
   }
@@ -186,11 +184,36 @@ a:focus {
     grid-area: next;
     justify-self: end;
   }
+  .frame__prev:hover,
+  .frame__next:hover {
+    transform: scale(1.2);
+  }
+
   .frame a {
     pointer-events: auto;
   }
   .content {
     height: 100vh;
     justify-content: center;
+  }
+}
+
+@media screen and (max-width: 53em) {
+  /* hide the controls on mobile */
+  [class*='controlPanel'] {
+    display: none;
+  }
+
+  /* position the next and prev absolutely only on mobile */
+  .frame__prev,
+  .frame__next {
+    position: absolute;
+    bottom: -18rem;
+  }
+  .frame__prev {
+    left: 0.5rem;
+  }
+  .frame__next {
+    right: 0.5rem;
   }
 }

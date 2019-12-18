@@ -4,9 +4,6 @@ import lambertFrag from 'three/src/renderers/shaders/ShaderLib/meshlambert_frag.
 import { monkeyPatch } from './three-utils'
 
 export class ProjectedMaterial extends THREE.ShaderMaterial {
-  isProjectedMaterial = true
-  instanced = false
-
   // TODO implement cover: true
   constructor({ camera, texture, color = 0xffffff, textureScale = 1, instanced = false } = {}) {
     // make sure the camera matrices are updated
@@ -130,7 +127,7 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
     // listen on resize if the camera used for the projection
     // is the same used to render.
     // do this on window resize because there is no way to
-    // listen for the resize of the renderer
+    // listen for the resize of the renderer (maybe mutation observer of canvas element?)
     window.addEventListener('resize', () => {
       this.uniforms.projectionMatrixCamera.value.copy(camera.projectionMatrix)
 
@@ -139,6 +136,7 @@ export class ProjectedMaterial extends THREE.ShaderMaterial {
       this.uniforms.heightScaled.value = heightScaledNew
     })
 
+    this.isProjectedMaterial = true
     this.instanced = instanced
   }
 }

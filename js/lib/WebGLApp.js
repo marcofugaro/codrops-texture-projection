@@ -65,12 +65,17 @@ export default class WebGLApp {
       isMobile: gpu.tier.toLowerCase().includes('mobile'),
     }
 
-    // handle resize events
-    window.addEventListener('resize', this.resize)
-    window.addEventListener('orientationchange', this.resize)
+    if (!options.width && !options.height) {
+      // handle resize events
+      window.addEventListener('resize', this.resize)
+      window.addEventListener('orientationchange', this.resize)
+    }
 
     // force an initial resize event
-    this.resize()
+    this.resize({
+      width: options.width,
+      height: options.height,
+    })
 
     // __________________________ADDONS__________________________
 

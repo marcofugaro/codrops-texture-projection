@@ -39,7 +39,7 @@ export class SlideSpiral extends THREE.Group {
 
   points = []
 
-  distancesFromPerimeter=[]
+  distancesFromPerimeter = []
   distancesFromCenter = []
   delaysFromPerimeter = []
   delaysFromCenter = []
@@ -158,7 +158,9 @@ export class SlideSpiral extends THREE.Group {
     this.delaysFromCenter = this.normalizeDelays(this.delaysFromCenter)
     webgl.controls.$onChanges(({ delayFactor, spiralRadius }) => {
       if (delayFactor) {
-        const delaysFromCenter = this.points.map((p, i) => this.generateDelay(this.distancesFromCenter[i]))
+        const delaysFromCenter = this.points.map((p, i) =>
+          this.generateDelay(this.distancesFromCenter[i])
+        )
         this.delaysFromCenter = this.normalizeDelays(delaysFromCenter)
 
         const delaysFromPerimeter = this.points.map((p, i) =>
@@ -295,7 +297,7 @@ export class SlideSpiral extends THREE.Group {
     this.targetPercentage = percentage
   }
 
-  updateCurvePoints = (curve) => {
+  updateCurvePoints = curve => {
     if (!curve.mesh) {
       return
     }
@@ -316,7 +318,7 @@ export class SlideSpiral extends THREE.Group {
       const delay =
         this.targetPercentage === 0.5 ? this.delaysFromPerimeter[i] : this.delaysFromCenter[i]
 
-      if (this.tStart) {
+      if (this.tStart !== undefined) {
         // where to put the box on the curve,
         // 0 is left of the screen, 0.5 center of the screen, 1 is right of the screen
         this.percentages[i] = lerp(
@@ -358,7 +360,8 @@ export class SlideSpiral extends THREE.Group {
         // rotate the tires
         const { frequency, speed, amplitude, attenuation } = this.webgl.controls.turbulence
         const distance = this.distancesFromPerimeter[i]
-        this.rotations[i] = impulseMultiple((distance + time * speed) * frequency, attenuation, 1) * amplitude
+        this.rotations[i] =
+          impulseMultiple((distance + time * speed) * frequency, attenuation, 1) * amplitude
       }
 
       // align the box on the curve
@@ -368,7 +371,9 @@ export class SlideSpiral extends THREE.Group {
       const MAX_ROTATION_DISTANCE = 0.3 // how much distance from the middle the rotation has still effect
       const fromMiddle = Math.abs(this.percentages[i] - 0.5)
       if (fromMiddle < MAX_ROTATION_DISTANCE * 1.1) {
-        const rotationAmount = eases.expoIn(mapRange(fromMiddle, 0, MAX_ROTATION_DISTANCE, 1, 0, true))
+        const rotationAmount = eases.expoIn(
+          mapRange(fromMiddle, 0, MAX_ROTATION_DISTANCE, 1, 0, true)
+        )
 
         this.dummy.rotateX(OPTIMAL_ROTATION * rotationAmount)
         this.dummy.rotateX(-this.rotations[i] * 0.2 * rotationAmount)

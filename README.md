@@ -1,13 +1,6 @@
-_How to use this template:_
+# Play with Texture Projection in Three.js
 
-- The general styles for the demo page are in css/base.css and individual styles go into the css/demoN.css
-- The README.md should be used to add credits and licensing information of resources used
-- For writing the tutorial, take a look at https://github.com/crnacura/CodropsTemplate/wiki/Writing-the-article
-- Delete this 'how to' in the final version and leave the following (fill in title/description, credits and social links, we'll do the rest):
-
-# The Title
-
-_Description_, _author_
+Learn how to project a texture on an object in [Three.js](http://threejs.org/), by [Marco Fugaro](https://twitter.com/marco_fugaro)
 
 ![Image Title](link)
 
@@ -45,7 +38,7 @@ This resource can be used freely if integrated or build upon in personal or comm
 
 ## Misc
 
-Follow _Author_: [Twitter](), [Dribbble](), [Google+](), [GitHub]()
+Follow _Author_: [Twitter](https://twitter.com/marco_fugaro), [GitHub](http://github.com/marcofugaro/), [Codepen](https://codepen.io/marco_fugaro)
 
 Follow Codrops: [Twitter](http://www.twitter.com/codrops), [Facebook](http://www.facebook.com/codrops), [Google+](https://plus.google.com/101095823814290637419), [GitHub](https://github.com/codrops), [Pinterest](http://www.pinterest.com/codrops/), [Instagram](https://www.instagram.com/codropsss/)
 

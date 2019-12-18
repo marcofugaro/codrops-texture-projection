@@ -18,7 +18,6 @@ export function addLights(webgl, options = {}) {
 
   // the size of the ortographic camera frustum
   // bigger means more diffuse shadows
-  // TODO put this in a constant, the radius of the cylinder*2
   const size = 8
   directionalLight.shadow.camera.left = -size / 2
   directionalLight.shadow.camera.right = size / 2
