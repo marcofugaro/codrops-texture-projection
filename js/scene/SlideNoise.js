@@ -1,11 +1,10 @@
 import * as THREE from 'three'
 import { mapRange, lerp, clamp01 } from 'canvas-sketch-util/math'
 import * as eases from 'eases'
-import {
-  ProjectedMaterial,
+import ProjectedMaterial, {
   projectInstanceAt,
   allocateProjectionData,
-} from '../lib/ProjectedMaterial'
+} from 'three-projected-material'
 import {
   alignOnCurve,
   visibleHeightAtZDepth,
@@ -117,7 +116,7 @@ export class SlideNoise extends THREE.Group {
       this.targetCurves.push(curve.clone())
 
       // show the curves only in debug mode and not all of them
-      if (window.DEBUG && i % 10 === 0) {
+      if (window.DEBUG && i % 15 === 0) {
         const curveGeometry = new THREE.Geometry().setFromPoints(curve.points)
         const curveMaterial = new THREE.LineBasicMaterial({
           color: 0x000000,

@@ -34,6 +34,7 @@
     "simplex-noise": "^2.4.0",
     "stats.js": "^0.17.0",
     "three": "0.110.0",
+    "three-projected-material": "^1.0.0",
     "touches": "^1.2.2"
   },
   "devDependencies": {

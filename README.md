@@ -30,7 +30,11 @@ npm run build
 
 ## Credits
 
-_third party resources_
+- Images from [Unsplash](https://unsplash.com/) and [Pexels](https://www.pexels.com/)
+- [Three.js](https://threejs.org/)
+- [poisson-disk-sampling](https://github.com/kchapelier/poisson-disk-sampling) algorithm
+- [canvas-sketch-util](https://github.com/mattdesl/canvas-sketch-util) for the function utils
+- [threejs-modern-app](https://github.com/marcofugaro/threejs-modern-app) for the boilerplate
 
 ## License
 
