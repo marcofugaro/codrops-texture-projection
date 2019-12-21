@@ -105,7 +105,6 @@ export class SlideSpiral extends THREE.Group {
 
     // create the instanced mesh
     this.instancedMesh = new THREE.InstancedMesh(geometry, material, this.NUM_INSTANCES)
-    this.instancedMesh.castShadow = true
     this.add(this.instancedMesh)
 
     this.points.forEach((point, i) => {

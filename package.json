@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "canvas-sketch-util": "^1.10.0",
-    "chroma-js": "^2.1.0",
     "controls-gui": "^1.2.2",
     "controls-state": "^1.1.1",
     "datauritoblob": "^1.0.0",

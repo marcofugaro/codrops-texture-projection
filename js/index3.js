@@ -15,10 +15,9 @@ const canvas = document.querySelector('#app')
 // setup the WebGLRenderer
 const webgl = new WebGLApp({
   canvas,
-  // set the scene background color
-  background: '#000000',
-  // show the fps counter from stats.js
-  showFps: window.DEBUG,
+  // set the scene background color to translarent
+  alpha: true,
+  backgroundAlpha: 0,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
     color: '#E7E200',
@@ -36,6 +35,7 @@ const webgl = new WebGLApp({
       attenuation: new State.Slider(50, { min: 1, max: 100, step: 0.01 }),
     },
   },
+  closeControls: true,
   // fix the height on mobile
   height: IS_MOBILE ? 500 : undefined,
 })

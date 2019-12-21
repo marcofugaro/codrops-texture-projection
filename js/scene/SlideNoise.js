@@ -100,7 +100,6 @@ export class SlideNoise extends THREE.Group {
 
     // create the instanced mesh
     this.instancedMesh = new THREE.InstancedMesh(geometry, material, this.NUM_INSTANCES)
-    this.instancedMesh.castShadow = true
     this.add(this.instancedMesh)
 
     const minX = -visibleWidthAtZDepth(STARTING_Z, this.webgl.camera) / 2 - this.width * 0.6
