@@ -14,7 +14,7 @@ import {
 import { noise, poisson, mapRangeTriple, timed } from '../lib/utils'
 
 // how much the animation of a single box lasts
-export const ANIMATION_DURATION = 1.5 // seconds
+export const ANIMATION_DURATION = 0.7 // seconds
 
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7

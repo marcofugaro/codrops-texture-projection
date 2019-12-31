@@ -21,14 +21,14 @@ const webgl = new WebGLApp({
   backgroundAlpha: 0,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
-    color: '#87320F',
+    color: '#999ba0',
     background: getComputedStyle(document.documentElement)
       .getPropertyValue('--color-bg')
       .trim(),
     // the interaction displacement
-    displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
+    displacement: new State.Slider(1.1, { min: 0, max: 2, step: 0.01 }),
     // how much there is between the first and the last to arrive
-    delayFactor: new State.Slider(1.3, { min: 0, max: 5, step: 0.01 }),
+    delayFactor: new State.Slider(0.73, { min: 0, max: 5, step: 0.01 }),
     // the waving effect
     turbulence: {
       speed: new State.Slider(1.3, { min: 0, max: 15, step: 0.01 }),
@@ -58,9 +58,9 @@ if (window.DEBUG) {
 webgl.canvas.style.visibility = 'hidden'
 
 const IMAGES = [
-  'images/sweets/dilyara-garifullina-unsplash.jpg',
-  'images/sweets/jennifer-pallian-unsplash.jpg',
-  'images/sweets/kharytonova-antonina-unsplash.jpg',
+  'images/5.jpeg',
+  'images/6.jpeg',
+  'images/7.jpeg',
 ]
 
 // preload the first texture

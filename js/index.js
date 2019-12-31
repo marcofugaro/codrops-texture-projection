@@ -20,7 +20,7 @@ const webgl = new WebGLApp({
   backgroundAlpha: 0,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
-    color: '#3698D5',
+    color: '#9e9b94',
     background: getComputedStyle(document.documentElement)
       .getPropertyValue('--color-bg')
       .trim(),
@@ -56,9 +56,10 @@ if (window.DEBUG) {
 webgl.canvas.style.visibility = 'hidden'
 
 const IMAGES = [
-  'images/swimsuits/adult-beautiful-bikini-blue-pexels.jpg',
-  'images/swimsuits/christopher-campbell2-unsplash.jpg',
-  'images/swimsuits/tyler-nix-unsplash.jpg',
+  'images/1.jpeg',
+  'images/2.jpeg',
+  'images/3.jpeg',
+  'images/4.jpeg'
 ]
 
 // preload the first texture

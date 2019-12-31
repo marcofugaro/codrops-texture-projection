@@ -14,13 +14,13 @@ import {
 import { poisson, mapRangeTriple, timed, noise, dampedSin } from '../lib/utils'
 
 // how much the animation of a single box lasts
-export const ANIMATION_DURATION = 1.3 // seconds
+export const ANIMATION_DURATION = 0.5 // seconds
 
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
 
 // how much behind the objects animate from
-const STARTING_Z = -2
+const STARTING_Z = -5
 
 const center = new THREE.Vector2(0, 0)
 

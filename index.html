@@ -8,16 +8,8 @@
 		<meta name="keywords" content="" />
 		<meta name="author" content="Codrops" />
 		<link rel="shortcut icon" href="favicon.ico">
-		<style>
-			:root {
-				--color-primary: #2845b8;
-				--color-accent: white;
-				--color-bg: #7ad1ef;
-			}
-		</style>
 		<link rel="stylesheet" type="text/css" href="css/base.css" />
-		<link href="https://fonts.googleapis.com/css?family=Playfair+Display" rel="stylesheet">
-		<link href="https://fonts.googleapis.com/css?family=Lora" rel="stylesheet">
+		<link rel="stylesheet" href="https://use.typekit.net/pcm0svs.css">
 		<script>document.documentElement.className="js";var supportsCssVars=function(){var e,t=document.createElement("style");return t.innerHTML="root: { --tmp-var: bold; }",document.head.appendChild(t),e=!!(window.CSS&&window.CSS.supports&&window.CSS.supports("font-weight","var(--tmp-var)")),t.parentNode.removeChild(t),e};supportsCssVars()||alert("Please view this demo in a modern browser that supports CSS Variables.");</script>
 		<!--script src="//tympanus.net/codrops/adpacks/analytics.js"></script-->
 	</head>
@@ -26,8 +18,7 @@
 			<div class="message">Some message for mobile (if needed).</div>
 			<div class="frame">
 				<div class="frame__title-wrap">
-					<h1 class="frame__title">Title</h1>
-					<p class="frame__tagline">Subtitle</a></p>
+					<h1 class="frame__title">Fragment Elements Slideshow</h1>
 				</div>
 				<div class="frame__links">
 					<a href="">Previous Demo</a>
@@ -39,15 +30,23 @@
 					<a href="index2.html" class="frame__demo">demo 2</a>
 					<a href="index3.html" class="frame__demo">demo 3</a>
 				</div>
-				<svg class="frame__prev" viewBox="0 0 103.4 185.4">
-					<path d="M92.6 0c2.7 0 5.5 1 7.6 3.1 4.2 4.2 4.2 11 0 15.2L25.8 92.7l74.4 74.4c4.2 4.2 4.2 11 0 15.2-4.2 4.2-11 4.2-15.2 0L3.1 100.4c-4.2-4.2-4.2-11 0-15.2L84.9 3.1C87.1 1 89.9 0 92.6 0z"/>
+				<svg class="frame__prev" viewBox="0 0 476.213 476.213">
+					<path d="M476.213 223.106H57.426l34.393-34.393L70.606 167.5 0 238.106l70.606 70.607L91.819 287.5l-34.393-34.394h418.787z"/>
 				</svg>
-				<svg class="frame__next" viewBox="0 0 103.4 185.4">
-					<path d="M10.9 185.4c-2.7 0-5.5-1-7.6-3.1-4.2-4.2-4.2-11 0-15.2l74.3-74.4L3.2 18.4C-1 14.2-1 7.4 3.2 3.2s11-4.2 15.2 0l81.9 81.9c4.2 4.2 4.2 11 0 15.2l-81.8 82.1c-2.1 2-5 3-7.6 3z"/>
+				<svg class="frame__next" viewBox="0 0 476.213 476.213">
+					<path d="M405.606 167.5l-21.212 21.213 34.393 34.393H0v30h418.787L384.394 287.5l21.212 21.213 70.607-70.607z"/>
 				</svg>
 			</div>
 			<div class="content">
-				<canvas id="app"></canvas>
+				<h2 class="content__title">When I was young, it seemed that life was so wonderful
+					A miracle, oh it was beautiful, magical
+					And all the birds in the trees, well they'd be singing so happily
+					Oh joyfully, playfully watching me
+					But then they send me away to teach me how to be sensible
+					Logical, oh responsible, practical
+					And they showed me a world where I could be so dependable
+					Oh clinical, oh intellectual, cynical</h2>
+				<canvas class="content__app" id="app"></canvas>
 			</div>
 		</main>
 		<!--script src="https://tympanus.net/codrops/adpacks/demoad.js"></script-->

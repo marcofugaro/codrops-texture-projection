@@ -20,9 +20,9 @@ const webgl = new WebGLApp({
   backgroundAlpha: 0,
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
-    color: '#E7E200',
+    color: '#cec298',
     // the interaction displacement
-    displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
+    displacement: new State.Slider(0.9, { min: 0, max: 2, step: 0.01 }),
     // how much there is between the first and the last to arrive
     delayFactor: new State.Slider(1.3, { min: 0, max: 5, step: 0.01 }),
     // how big is the spiral
@@ -49,9 +49,9 @@ if (window.DEBUG) {
 webgl.canvas.style.visibility = 'hidden'
 
 const IMAGES = [
-  'images/cars/dhiva-krishna-unsplash.jpg',
-  'images/cars/adils-photography-unsplash.jpg',
-  'images/cars/olav-tvedt-unsplash.jpg',
+  'images/8.jpeg',
+  'images/9.jpeg',
+  'images/10.jpeg',
 ]
 
 // preload the first texture

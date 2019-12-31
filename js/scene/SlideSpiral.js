@@ -21,11 +21,11 @@ export const ANIMATION_DURATION = 1.3 // seconds
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
 
-// the x rotation so the tires are nicely flat
-const OPTIMAL_ROTATION = Math.PI / 3
+// the x rotation so the leaves are nicely flat
+const OPTIMAL_ROTATION = 0
 
-const tireKey = assets.queue({
-  url: 'tire.glb',
+const leafKey = assets.queue({
+  url: 'maple-leaf-2.glb',
   type: 'gltf',
 })
 
@@ -83,8 +83,8 @@ export class SlideSpiral extends THREE.Group {
 
     this.NUM_INSTANCES = this.points.length
 
-    const tire = assets.get(tireKey).scene.clone()
-    const geometry = extractGeometry(tire)
+    const leaf = assets.get(leafKey).scene.clone()
+    const geometry = extractGeometry(leaf)
     geometry.scale(0.03, 0.03, 0.03)
 
     const material = new ProjectedMaterial({
@@ -355,7 +355,7 @@ export class SlideSpiral extends THREE.Group {
           this.updateCurvePoints(curve)
         }
 
-        // rotate the tires
+        // rotate the leaves
         const { frequency, speed, amplitude, attenuation } = this.webgl.controls.turbulence
         const distance = this.distancesFromPerimeter[i]
         this.rotations[i] =
