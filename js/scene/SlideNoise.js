@@ -14,7 +14,7 @@ import {
 import { noise, poisson, mapRangeTriple, timed } from '../lib/utils'
 
 // how much the animation of a single box lasts
-export const ANIMATION_DURATION = 0.7 // seconds
+export const ANIMATION_DURATION = 1 // seconds
 
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
@@ -200,7 +200,7 @@ export class SlideNoise extends THREE.Group {
       const offsetX = mapRange(i, 0, segments - 1, startX, endX)
 
       const noiseAmount = mapRangeTriple(i, 0, halfIndex, segments - 1, 1, 0, 1)
-      const frequency = 0.3
+      const frequency = 0.25
       const noiseAmplitude = 0.6
       const noiseY = noise(offsetX * frequency) * noiseAmplitude * eases.quartOut(noiseAmount)
       const scaleY = mapRange(eases.quartIn(1 - noiseAmount), 0, 1, 0.2, 1)

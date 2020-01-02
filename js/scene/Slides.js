@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import assets from '../lib/AssetManager'
 
 // how much to wait until the animation of the next slides starts
-export const SLIDES_INTERVAL = 1.5 // seconds
+export const SLIDES_INTERVAL = 0.8 // seconds
 
 export class Slides extends THREE.Group {
   slides = []

@@ -30,7 +30,7 @@ npm run build
 
 ## Credits
 
-- Images from [Unsplash](https://unsplash.com/) and [Pexels](https://www.pexels.com/)
+- Images from [Unsplash](https://unsplash.com/)
 - [Three.js](https://threejs.org/)
 - [poisson-disk-sampling](https://github.com/kchapelier/poisson-disk-sampling) algorithm
 - [canvas-sketch-util](https://github.com/mattdesl/canvas-sketch-util) for the function utils

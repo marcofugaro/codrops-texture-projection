@@ -61,23 +61,6 @@ export function mouseToCoordinates({ x, y, targetZ = 0, camera, width, height })
   return pos
 }
 
-export function monkeyPatch(shader, { header = '', main = '', ...replaces }) {
-  let patchedShader = shader
-
-  Object.keys(replaces).forEach(key => {
-    patchedShader = patchedShader.replace(key, replaces[key])
-  })
-
-  return patchedShader.replace(
-    'void main() {',
-    `
-    ${header}
-    void main() {
-      ${main}
-    `
-  )
-}
-
 // extract all geometry from a gltf scene
 export function extractGeometry(gltf) {
   const geometries = []

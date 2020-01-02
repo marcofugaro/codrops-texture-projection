@@ -168,21 +168,21 @@ a:focus {
   grid-area: 1 / 1 / 2 / 2;
   text-align: center;
   -webkit-text-stroke: 1px #afada3;
-	text-stroke: 1px #afada3;
-	-webkit-text-fill-color: transparent;
-	text-fill-color: transparent;
+  text-stroke: 1px #afada3;
+  -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
   color: transparent;
   text-transform: lowercase;
 }
 
 .demo-2 .content__title {
   -webkit-text-stroke: 1px #eaecef;
-	text-stroke: 1px #eaecef;
+  text-stroke: 1px #eaecef;
 }
 
 .demo-3 .content__title {
   -webkit-text-stroke: 1px #cec298;
-	text-stroke: 1px #cec298;
+  text-stroke: 1px #cec298;
 }
 
 @media screen and (min-width: 53em) {
@@ -254,21 +254,16 @@ a:focus {
 }
 
 @media screen and (max-width: 53em) {
-  /* hide the controls on mobile */
-  [class*='controlPanel'] {
-    display: none;
-  }
-
   /* position the next and prev absolutely only on mobile */
   .frame__prev,
   .frame__next {
     position: absolute;
-    bottom: -18rem;
+    bottom: calc((12rem - 100vh) / 2);
   }
   .frame__prev {
-    left: 0.5rem;
+    left: 0.75rem;
   }
   .frame__next {
-    right: 0.5rem;
+    right: 0.75rem;
   }
 }

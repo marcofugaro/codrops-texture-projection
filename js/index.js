@@ -21,13 +21,10 @@ const webgl = new WebGLApp({
   orbitControls: window.DEBUG && { distance: 5 },
   controls: {
     color: '#9e9b94',
-    background: getComputedStyle(document.documentElement)
-      .getPropertyValue('--color-bg')
-      .trim(),
     // the interaction displacement
     displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
     // how much there is between the first and the last to arrive
-    delayFactor: new State.Slider(2.2, { min: 0, max: 10, step: 0.01 }),
+    delayFactor: new State.Slider(1.8, { min: 0, max: 10, step: 0.01 }),
     // the waving effect
     turbulence: {
       speed: new State.Slider(0.2, { min: 0, max: 3, step: 0.01 }),
@@ -36,15 +33,9 @@ const webgl = new WebGLApp({
     },
   },
   closeControls: true,
+  hideControls: IS_MOBILE,
   // fix the height on mobile
-  height: IS_MOBILE ? 500 : undefined,
-})
-
-// change the background color on controls changes
-webgl.controls.$onChanges(({ background }) => {
-  if (background) {
-    document.documentElement.style.setProperty('--color-bg', background.value)
-  }
+  height: IS_MOBILE ? 400 : undefined,
 })
 
 // attach it to the window to inspect in the console
@@ -55,12 +46,7 @@ if (window.DEBUG) {
 // hide canvas
 webgl.canvas.style.visibility = 'hidden'
 
-const IMAGES = [
-  'images/1.jpeg',
-  'images/2.jpeg',
-  'images/3.jpeg',
-  'images/4.jpeg'
-]
+const IMAGES = ['images/1.jpeg', 'images/2.jpeg', 'images/3.jpeg', 'images/4.jpeg']
 
 // preload the first texture
 const firstImage = assets.queue({

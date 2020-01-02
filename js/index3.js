@@ -36,8 +36,9 @@ const webgl = new WebGLApp({
     },
   },
   closeControls: true,
+  hideControls: IS_MOBILE,
   // fix the height on mobile
-  height: IS_MOBILE ? 500 : undefined,
+  height: IS_MOBILE ? 450 : undefined,
 })
 
 // attach it to the window to inspect in the console
@@ -48,11 +49,7 @@ if (window.DEBUG) {
 // hide canvas
 webgl.canvas.style.visibility = 'hidden'
 
-const IMAGES = [
-  'images/8.jpeg',
-  'images/9.jpeg',
-  'images/10.jpeg',
-]
+const IMAGES = ['images/8.jpeg', 'images/9.jpeg', 'images/10.jpeg']
 
 // preload the first texture
 const firstImage = assets.queue({

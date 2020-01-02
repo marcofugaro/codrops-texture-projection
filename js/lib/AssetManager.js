@@ -6,6 +6,11 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import loadTexture from './loadTexture'
 import loadEnvMap from './loadEnvMap'
 
+process.env.PUBLIC_URL = window.location.pathname.slice(
+  0,
+  window.location.pathname.lastIndexOf('/') + 1
+)
+
 class AssetManager {
   #queue = []
   #cache = {}
@@ -159,6 +164,9 @@ class AssetManager {
     if (url in this.#cache) {
       return this.#cache[url]
     }
+
+    // inject the pathname
+    url = `${process.env.PUBLIC_URL}${url}`
 
     switch (type) {
       case 'gltf':
