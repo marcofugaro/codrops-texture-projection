@@ -16,16 +16,16 @@ import { poisson, timed, mapRangeTriple, impulseMultiple } from '../lib/utils'
 import assets from '../lib/AssetManager'
 
 // how much the animation of a single box lasts
-export const ANIMATION_DURATION = 1.3 // seconds
+export const ANIMATION_DURATION = 1.2 // seconds
 
 // texture scale relative to viewport
 const TEXTURE_SCALE = 0.7
 
 // the x rotation so the leaves are nicely flat
-const OPTIMAL_ROTATION = 0
+const OPTIMAL_ROTATION = Math.PI * 0.6
 
 const leafKey = assets.queue({
-  url: 'maple-leaf-2.glb',
+  url: 'maple-leaf.glb',
   type: 'gltf',
 })
 
@@ -76,7 +76,7 @@ export class SlideSpiral extends THREE.Group {
 
     // get the points xy coordinates based on poisson-disc sampling
     const poissonSampling = window.DEBUG ? timed(poisson, 'Poisson-disc sampling') : poisson
-    this.points = poissonSampling([this.width, this.height], 8, 9.66)
+    this.points = poissonSampling([this.width, this.height], 13, 14)
 
     // center them
     this.points = this.points.map(point => [point[0] - this.width / 2, point[1] - this.height / 2])
@@ -85,7 +85,9 @@ export class SlideSpiral extends THREE.Group {
 
     const leaf = assets.get(leafKey).scene.clone()
     const geometry = extractGeometry(leaf)
-    geometry.scale(0.03, 0.03, 0.03)
+
+    geometry.scale(0.085, 0.085, 0.085)
+    geometry.rotateY(Math.PI)
 
     const material = new ProjectedMaterial({
       camera: webgl.camera,
@@ -121,7 +123,7 @@ export class SlideSpiral extends THREE.Group {
       if (window.DEBUG && i % 15 === 0) {
         const curveGeometry = new THREE.Geometry().setFromPoints(curve.points)
         const curveMaterial = new THREE.LineBasicMaterial({
-          color: 0xffffff,
+          color: 0x000000,
           transparent: true,
           opacity: 0.2,
         })
@@ -138,7 +140,7 @@ export class SlideSpiral extends THREE.Group {
 
       // put it at its center position
       alignOnCurve(this.dummy, curve, 0.5)
-      this.dummy.rotateX(OPTIMAL_ROTATION)
+      this.dummy.rotateZ(OPTIMAL_ROTATION)
       this.dummy.updateMatrix()
       this.instancedMesh.setMatrixAt(i, this.dummy.matrix)
 
@@ -331,8 +333,8 @@ export class SlideSpiral extends THREE.Group {
         curve.points.forEach((point, j) => {
           const targetPoint = targetCurve.points[j]
 
-          // if the user has interacted
-          if (this.mousePoint) {
+          // if the user has interacted and we're not on mobile
+          if (this.mousePoint && !window.IS_MOBILE) {
             // displace the curve points
             if (point.distanceTo(this.mousePoint) < displacement) {
               const direction = point.clone().sub(this.mousePoint)
@@ -373,9 +375,8 @@ export class SlideSpiral extends THREE.Group {
           mapRange(fromMiddle, 0, MAX_ROTATION_DISTANCE, 1, 0, true)
         )
 
-        this.dummy.rotateX(OPTIMAL_ROTATION * rotationAmount)
-        this.dummy.rotateX(-this.rotations[i] * 0.2 * rotationAmount)
-        this.dummy.rotateZ(this.rotations[i] * rotationAmount)
+        this.dummy.rotateZ(OPTIMAL_ROTATION * rotationAmount)
+        this.dummy.rotateX(-this.rotations[i] * rotationAmount)
       }
 
       this.dummy.updateMatrix()

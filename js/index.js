@@ -7,7 +7,7 @@ import { SlideNoise } from './scene/SlideNoise'
 
 window.DEBUG = window.location.search.includes('debug')
 
-const IS_MOBILE = window.matchMedia('(max-width: 53em)').matches
+window.IS_MOBILE = window.matchMedia('(max-width: 53em)').matches
 
 // grab our canvas
 const canvas = document.querySelector('#app')
@@ -22,9 +22,9 @@ const webgl = new WebGLApp({
   controls: {
     color: '#9e9b94',
     // the interaction displacement
-    displacement: new State.Slider(0.5, { min: 0, max: 2, step: 0.01 }),
+    displacement: new State.Slider(0.6, { min: 0, max: 2, step: 0.01 }),
     // how much there is between the first and the last to arrive
-    delayFactor: new State.Slider(1.8, { min: 0, max: 10, step: 0.01 }),
+    delayFactor: new State.Slider(1.5, { min: 0, max: 10, step: 0.01 }),
     // the waving effect
     turbulence: {
       speed: new State.Slider(0.2, { min: 0, max: 3, step: 0.01 }),
@@ -33,9 +33,9 @@ const webgl = new WebGLApp({
     },
   },
   closeControls: true,
-  hideControls: IS_MOBILE,
+  hideControls: window.IS_MOBILE,
   // fix the height on mobile
-  height: IS_MOBILE ? 400 : undefined,
+  height: window.IS_MOBILE ? 400 : undefined,
 })
 
 // attach it to the window to inspect in the console

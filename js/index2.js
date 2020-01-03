@@ -8,7 +8,7 @@ import { SlideSine } from './scene/SlideSine'
 
 window.DEBUG = window.location.search.includes('debug')
 
-const IS_MOBILE = window.matchMedia('(max-width: 53em)').matches
+window.IS_MOBILE = window.matchMedia('(max-width: 53em)').matches
 
 // grab our canvas
 const canvas = document.querySelector('#app')
@@ -35,9 +35,9 @@ const webgl = new WebGLApp({
     },
   },
   closeControls: true,
-  hideControls: IS_MOBILE,
+  hideControls: window.IS_MOBILE,
   // fix the height on mobile
-  height: IS_MOBILE ? 450 : undefined,
+  height: window.IS_MOBILE ? 450 : undefined,
 })
 
 // attach it to the window to inspect in the console

@@ -31,9 +31,10 @@ npm run build
 ## Credits
 
 - Images from [Unsplash](https://unsplash.com/)
+- Leaf model from [Poly](https://poly.google.com/)
 - [Three.js](https://threejs.org/)
 - [poisson-disk-sampling](https://github.com/kchapelier/poisson-disk-sampling) algorithm
-- [canvas-sketch-util](https://github.com/mattdesl/canvas-sketch-util) for the function utils
+- [canvas-sketch-util](https://github.com/mattdesl/canvas-sketch-util) for the util functions
 - [threejs-modern-app](https://github.com/marcofugaro/threejs-modern-app) for the boilerplate
 
 ## License
@@ -42,7 +43,7 @@ This resource can be used freely if integrated or build upon in personal or comm
 
 ## Misc
 
-Follow _Author_: [Twitter](https://twitter.com/marco_fugaro), [GitHub](http://github.com/marcofugaro/), [Codepen](https://codepen.io/marco_fugaro)
+Follow Marco: [Twitter](https://twitter.com/marco_fugaro), [GitHub](http://github.com/marcofugaro/), [Codepen](https://codepen.io/marco_fugaro)
 
 Follow Codrops: [Twitter](http://www.twitter.com/codrops), [Facebook](http://www.facebook.com/codrops), [Google+](https://plus.google.com/101095823814290637419), [GitHub](https://github.com/codrops), [Pinterest](http://www.pinterest.com/codrops/), [Instagram](https://www.instagram.com/codropsss/)
 

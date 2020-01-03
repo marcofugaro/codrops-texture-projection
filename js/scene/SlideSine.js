@@ -258,8 +258,8 @@ export class SlideSine extends THREE.Group {
           const { x, y } = point
           const targetPoint = targetCurve.points[j]
 
-          // if the user has interacted
-          if (this.mousePoint) {
+          // if the user has interacted and we're not on mobile
+          if (this.mousePoint && !window.IS_MOBILE) {
             // displace the curve points
             if (point.distanceTo(this.mousePoint) < displacement) {
               const direction = point.clone().sub(this.mousePoint)
