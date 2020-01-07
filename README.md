@@ -1,12 +1,12 @@
-# Play with Texture Projection in Three.js
+# Playing with Texture Projection in Three.js
 
 Learn how to project a texture on an object in [Three.js](http://threejs.org/), by [Marco Fugaro](https://twitter.com/marco_fugaro)
 
-![Image Title](link)
+![Playing with Texture Projection](https://tympanus.net/codrops/wp-content/uploads/2020/01/TextureProjection_featured.jpg)
 
-[Article on Codrops](https://tympanus.net/codrops/?p=)
+[Article on Codrops](https://tympanus.net/codrops/?p=45827)
 
-[Demo](http://tympanus.net/Development/.../)
+[Demo](http://tympanus.net/Tutorials/TextureProjection/)
 
 ## Installation
 

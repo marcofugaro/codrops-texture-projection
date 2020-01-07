@@ -122,7 +122,7 @@ a:focus {
 
 .frame__demo--current,
 .frame__demo--current:hover {
-  color: var(--accent);
+  color: var(--color-accent);
 }
 
 .frame__prev,
