@@ -25,7 +25,7 @@
     "detect-gpu": "^1.1.2",
     "eases": "^1.0.8",
     "image-promise": "^6.0.2",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "orbit-controls": "^1.2.4",
     "p-map": "^3.0.0",
     "poisson-disk-sampling": "^1.0.6",
